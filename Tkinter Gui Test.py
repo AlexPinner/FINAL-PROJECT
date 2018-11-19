@@ -85,9 +85,9 @@ if sys.version_info[0] < 3:
 else:
     import tkinter as Tk
 
-my_window = Tk.Tk()
+root = Tk.Tk()
 
-note = ttk.Notebook(my_window)
+note = ttk.Notebook(root)
 
 big_pane1 = PanedWindow(orient=HORIZONTAL)
 big_pane1.pack(fill=BOTH, expand=1)
@@ -142,4 +142,4 @@ note.add(tab3, text = "Tab Three (Test)")
 
 note.pack()
 
-my_window.mainloop()
+root.mainloop()
