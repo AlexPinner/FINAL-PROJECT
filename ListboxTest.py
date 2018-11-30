@@ -39,25 +39,36 @@ for item in ["one", "two", "three", "four"]:
 big_pane.add(listbox)
 """
 
+
 #this section is like the previous one but with a scrollbar
-left = Frame(big_pane)
-left.pack()
+#left = Frame(big_pane)
+#left.pack()
 
-listbox = Listbox(left)
-listbox.pack(side=LEFT, fill=BOTH)
+len_max = 0
+list_items = ["item1", "item2", "Testing to see if expanddddddddddddddd", "item33"]
+#Cleaning_list = ["Find and Replace","Scaling","Factorize","Feature Selection", "Outliers"]
+#EDA_list = ["Pairplot","Correlation Matrix","Bar Chart","Scatter Plot","PCA"]
 
-scrollbar = Scrollbar(left, orient=VERTICAL)
+for m in list_items:
+    if len(m) > len_max:
+        len_max = len(m)
+
+listbox = Listbox(big_pane, width= len_max)
+
+scrollbar = Scrollbar(big_pane, orient=VERTICAL)
 scrollbar.config(command=listbox.yview)
 scrollbar.pack(side=RIGHT, fill=Y)
 
 listbox.config(yscrollcommand=scrollbar.set)
+listbox.pack(side=LEFT, fill=BOTH, expand=1)
 
-listbox.insert(END, "Testing to see if expand")
+for m in list_items:
+    listbox.insert(END, str(m))
 
 for i in range(1000):
     listbox.insert(END, str(i))
 
-big_pane.add(left)
+big_pane.add(listbox)
 
 
 right = PanedWindow(orient=VERTICAL)
