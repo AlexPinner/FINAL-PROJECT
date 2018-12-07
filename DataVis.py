@@ -7,6 +7,13 @@ if sys.version_info[0] < 3:
 else:
     import tkinter as Tk
 
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+
 #Create main window
 root = Tk.Tk()
 
@@ -44,6 +51,24 @@ def Create_Listbox(window, list_items):
     
     return listbox
 
+def EDA_onSelect(evt):
+    w = evt.widget
+    #print(w.curselection())
+    if(w.curselection()):
+        index = int(w.curselection()[0])
+        value = w.get(index)
+        #switch case instead of this print
+        print('You selected item %d: "%s"' % (index, value))
+
+def Cleaning_onSelect(evt):
+    w = evt.widget
+    #print(w.curselection())
+    if(w.curselection()):
+        index = int(w.curselection()[0])
+        value = w.get(index)
+        #switch case instead of this print
+        print('You selected item %d: "%s"' % (index, value))
+
 #PLACEHOLDER FRAME, DELETE LATER
 class Red_Frame(Frame):
     def __init__(self, the_window):
@@ -52,30 +77,15 @@ class Red_Frame(Frame):
         self["width"]=150
         self["bg"]="red"
 
-
-#Create tab for exploratory data analysis (EDA)
-EDA_Pane = PanedWindow(orient=HORIZONTAL)
-EDA_Pane.pack(fill=BOTH, expand=1)
-#Leftmost item, listbox
-left = Frame(EDA_Pane)
-EDA_Listbox = Create_Listbox(left, EDA_list)
-EDA_Pane.add(left)
-right = PanedWindow(orient=VERTICAL)
-right.pack(fill=BOTH, expand=1)
-EDA_Pane.add(right)
-#Top right item, canvas
-EDA_Canvas = Red_Frame(EDA_Pane)
-right.add(EDA_Canvas)
-#Bottom right item, controls
-EDA_Controls = Red_Frame(EDA_Pane)
-right.add(EDA_Controls)
-
-#Create tab for data cleaning
+###############################
+##Create tab for data cleaning
+#############################
 Data_Cleaning_Pane = PanedWindow(orient=HORIZONTAL)
 Data_Cleaning_Pane.pack(fill=BOTH, expand=1)
 #Leftmost item, listbox
 left = Frame(Data_Cleaning_Pane)
 Data_Cleaning_Listbox = Create_Listbox(left, Cleaning_list)
+Data_Cleaning_Listbox.bind('<<ListboxSelect>>', Cleaning_onSelect)
 Data_Cleaning_Pane.add(left)
 right = PanedWindow(orient=VERTICAL)
 right.pack(fill=BOTH, expand=1)
@@ -87,9 +97,40 @@ right.add(Data_Cleaning_Table)
 Data_Cleaning_Controls = Red_Frame(Data_Cleaning_Pane)
 right.add(Data_Cleaning_Controls)
 
-#Add the tabs to the notebook
-note.add(EDA_Pane, text="EDA")
+
+#################################################
+##Create tab for exploratory data analysis (EDA)
+###############################################
+EDA_Pane = PanedWindow(orient=HORIZONTAL)
+EDA_Pane.pack(fill=BOTH, expand=1)
+#Leftmost item, listbox
+left = Frame(EDA_Pane)
+EDA_Listbox = Create_Listbox(left, EDA_list)
+EDA_Listbox.bind('<<ListboxSelect>>', EDA_onSelect)
+EDA_Pane.add(left)
+right = PanedWindow(orient=VERTICAL)
+right.pack(fill=BOTH, expand=1)
+EDA_Pane.add(right)
+#Top right item, canvas
+EDA_Canvas = Red_Frame(EDA_Pane)
+"""
+try:
+    fig = graph.get_figure()
+except:
+    fig = graph.fig
+EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Pane)
+EDA_Canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+"""
+right.add(EDA_Canvas)
+#Bottom right item, controls
+EDA_Controls = Red_Frame(EDA_Pane)
+right.add(EDA_Controls)
+
+###############################
+##Add the tabs to the notebook
+#############################
 note.add(Data_Cleaning_Pane, text="Data Cleaning")
+note.add(EDA_Pane, text="EDA")
 
 note.pack()
 

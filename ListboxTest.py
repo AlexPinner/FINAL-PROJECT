@@ -39,10 +39,10 @@ for item in ["one", "two", "three", "four"]:
 big_pane.add(listbox)
 """
 
-
+"""
 #this section is like the previous one but with a scrollbar
-#left = Frame(big_pane)
-#left.pack()
+left = Frame(big_pane)
+left.pack()
 
 len_max = 0
 list_items = ["item1", "item2", "Testing to see if expanddddddddddddddd", "item33"]
@@ -53,9 +53,9 @@ for m in list_items:
     if len(m) > len_max:
         len_max = len(m)
 
-listbox = Listbox(big_pane, width= len_max)
+listbox = Listbox(left, width= len_max)
 
-scrollbar = Scrollbar(big_pane, orient=VERTICAL)
+scrollbar = Scrollbar(left, orient=VERTICAL)
 scrollbar.config(command=listbox.yview)
 scrollbar.pack(side=RIGHT, fill=Y)
 
@@ -68,7 +68,55 @@ for m in list_items:
 for i in range(1000):
     listbox.insert(END, str(i))
 
-big_pane.add(listbox)
+big_pane.add(left)
+"""
+
+#This section is like the previous one with scrollbar but with a listbox selection event
+def EDA_onSelect(evt):
+    w = evt.widget
+    index = int(w.curselection()[0])
+    value = w.get(index)
+    #replace this with meaningful switches
+    if(value=="item1"):
+        print('You selected item %d: "%s"' % (index, value))
+    elif(index==3):
+        print('You selected item %d: "%s"' % (index, value))
+
+def Cleaning_onSelect(evt):
+    w = evt.widget
+    index = int(w.curselection()[0])
+    value = w.get(index)
+    print(w.curselection()[0])
+
+left = Frame(big_pane)
+left.pack()
+
+len_max = 0
+list_items = ["item1", "item2", "Testing to see if expanddddddddddddddd", "item33"]
+#Cleaning_list = ["Find and Replace","Scaling","Factorize","Feature Selection", "Outliers"]
+#EDA_list = ["Pairplot","Correlation Matrix","Bar Chart","Scatter Plot","PCA"]
+
+for m in list_items:
+    if len(m) > len_max:
+        len_max = len(m)
+
+listbox = Listbox(left, width= len_max)
+listbox.bind('<<ListboxSelect>>', Cleaning_onSelect)
+
+scrollbar = Scrollbar(left, orient=VERTICAL)
+scrollbar.config(command=listbox.yview)
+scrollbar.pack(side=RIGHT, fill=Y)
+
+listbox.config(yscrollcommand=scrollbar.set)
+listbox.pack(side=LEFT, fill=BOTH, expand=1)
+
+for m in list_items:
+    listbox.insert(END, str(m))
+
+for i in range(1000):
+    listbox.insert(END, str(i))
+
+big_pane.add(left)
 
 
 right = PanedWindow(orient=VERTICAL)

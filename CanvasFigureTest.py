@@ -54,10 +54,9 @@ graph = sns.swarmplot(x="species", y="petal_length", data=iris)
 fig = graph.get_figure()
 
 canvas = FigureCanvasTkAgg(fig, master=my_window)
-canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
+canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 """
 
-"""
 #This should work for any sns plots that don't count as plots and don't have the get_figure method, instead access the fig object directly
 import numpy as np
 import pandas as pd
@@ -71,7 +70,12 @@ graph = sns.factorplot(data=iris)
 fig = graph.fig
 
 canvas = FigureCanvasTkAgg(fig, master=my_window)
-canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
-"""
+canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
+#this section will be a function that's called when listbox changes or control panel applies (maybe two seperate functions? One for listbox changes and the other for control panel changes?)
+fig.clear()
+graph = sns.swarmplot(x="species", y="petal_length", data=iris)
+#^^^ or sns.whatever graph from listbox(whatever params from control panel)
+fig = graph.get_figure()
 
 my_window.mainloop()
