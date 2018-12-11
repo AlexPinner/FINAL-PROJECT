@@ -14,16 +14,24 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser  # ver. < 3.0
+
 #Create main window
 root = Tk.Tk()
 
 #Create notebook (thing that controls the tabs)
 note = ttk.Notebook(root)
 
-#Create the EDA listbox
+#Create config parser for ini files
+config = ConfigParser()
+
+#Create the EDA listbox list
 EDA_list = ["Pairplot","Correlation Matrix","Bar Chart","Scatter Plot","PCA"]
 
-#Create the data cleaning listbox
+#Create the data cleaning listbox list
 Cleaning_list = ["Find and Replace","Scaling","Factorize","Feature Selection", "Outliers"]
 
 def Len_Max(list_item):
@@ -55,10 +63,41 @@ def EDA_onSelect(evt):
     w = evt.widget
     #print(w.curselection())
     if(w.curselection()):
+        #Get data about current selection
         index = int(w.curselection()[0])
         value = w.get(index)
-        #switch case instead of this print
-        print('You selected item %d: "%s"' % (index, value))
+        #Read ini file to check for presets
+        config.read('test.ini')
+        if(index==0):
+            #Pairplot
+            if(config.has_section('Pairplot')):
+                #use custom vals for fig creation
+            else:
+                #go with default fig creation
+        elif(index==1):
+            #Correlation matrix
+            if(config.has_section('Correlation')):
+                #use custom vals for fig creation
+            else:
+                #go with default fig creation
+        elif (index==2):
+            #Bar chart
+            if(config.has_section('Bar Chart')):
+                #use custom vals for fig creation
+            else:
+                #go with default fig creation
+        elif (index==3):
+            #Scatter plot
+            if(config.has_section('Pairplot_User')):
+                #use custom vals for fig creation
+            else:
+                #go with default fig creation
+        elif (index==4):
+            #PCA
+            if(config.has_section('Pairplot_User')):
+                #use custom vals for fig creation
+            else:
+                #go with default fig creation
 
 def Cleaning_onSelect(evt):
     w = evt.widget
@@ -68,6 +107,21 @@ def Cleaning_onSelect(evt):
         value = w.get(index)
         #switch case instead of this print
         print('You selected item %d: "%s"' % (index, value))
+        if(index==0):
+            print('You selected item %d: "%s"' % (index, value))
+            #Find and replace
+        elif(index==1):
+            print('You selected item %d: "%s"' % (index, value))
+            #Scaling
+        elif (index==2):
+            print('You selected item %d: "%s"' % (index, value))
+            #Factorize
+        elif (index==3):
+            print('You selected item %d: "%s"' % (index, value))
+            #Feature Selection
+        elif (index==4):
+            print('You selected item %d: "%s"' % (index, value))
+            #Outliers
 
 #PLACEHOLDER FRAME, DELETE LATER
 class Red_Frame(Frame):
