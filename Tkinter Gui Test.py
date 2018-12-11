@@ -123,9 +123,14 @@ big_pane3.add(right)
 top = Brown_Frame(big_pane3)
 right.add(top)
 
-iris = sns.load_dataset("iris")
-graph = sns.swarmplot(x="species", y="petal_length", data=iris)
-fig = graph.get_figure()
+#iris = sns.load_dataset("iris")
+#graph = sns.swarmplot(x="species", y="petal_length", data=iris)
+#fig = graph.get_figure()
+
+data = sns.load_dataset("iris")
+data = data.dropna()
+graph = sns.pairplot(data=data, kind="reg")
+fig = graph.fig
 
 canvas = FigureCanvasTkAgg(fig, master=right)
 bottom = canvas.get_tk_widget()

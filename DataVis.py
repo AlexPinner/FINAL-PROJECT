@@ -28,6 +28,12 @@ note = ttk.Notebook(root)
 #Create config parser for ini files
 config = ConfigParser()
 
+#Forward declare figure object for use in canvas
+data = sns.load_dataset("iris")
+data = data.dropna()
+graph = sns.pairplot(data=data, kind="reg")
+fig = graph.fig
+
 #Create the EDA listbox list
 EDA_list = ["Pairplot","Correlation Matrix","Bar Chart","Scatter Plot","PCA"]
 
@@ -68,46 +74,54 @@ def EDA_onSelect(evt):
         value = w.get(index)
         #Read ini file to check for presets
         config.read('test.ini')
+        #Pairplot
         if(index==0):
-            #Pairplot
             if(config.has_section('Pairplot')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
+                data = sns.load_dataset("iris")
+                data = data.dropna()
+                graph = sns.pairplot(data=data, kind="reg")
+        #Correlation matrix
         elif(index==1):
-            #Correlation matrix
             if(config.has_section('Correlation')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
+        #Bar chart
         elif (index==2):
-            #Bar chart
             if(config.has_section('Bar Chart')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
+        #Scatter plot
         elif (index==3):
-            #Scatter plot
             if(config.has_section('Pairplot_User')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
+        #PCA
         elif (index==4):
-            #PCA
             if(config.has_section('Pairplot_User')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
+        #update the fig object being held in the canvas
+        try:
+            fig = graph.get_figure()
+        except:
+            fig = graph.fig
 
 def Cleaning_onSelect(evt):
     w = evt.widget
@@ -176,16 +190,10 @@ right = PanedWindow(orient=VERTICAL)
 right.pack(fill=BOTH, expand=1)
 EDA_Pane.add(right)
 #Top right item, canvas
-EDA_Canvas = Red_Frame(EDA_Pane)
-"""
-try:
-    fig = graph.get_figure()
-except:
-    fig = graph.fig
-EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Pane)
-EDA_Canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-"""
-right.add(EDA_Canvas)
+#EDA_Canvas = Red_Frame(EDA_Pane)
+EDA_Canvas = FigureCanvasTkAgg(fig, master=right)
+top = EDA_Canvas.get_tk_widget()
+right.add(top)
 #Bottom right item, controls
 EDA_Controls = Red_Frame(EDA_Pane)
 right.add(EDA_Controls)
@@ -196,6 +204,6 @@ right.add(EDA_Controls)
 note.add(Data_Cleaning_Pane, text="Data Cleaning")
 note.add(EDA_Pane, text="EDA")
 
-note.pack()
+note.pack(fill=BOTH, expand=1)
 
 root.mainloop()
