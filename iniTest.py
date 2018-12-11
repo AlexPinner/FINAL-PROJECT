@@ -7,7 +7,10 @@ except ImportError:
 config = ConfigParser()
 
 # parse existing file
-config.read('test.ini')
+try:
+    config.read('test.ini')
+except:
+    print("File not found")
 
 # read values from a section
 string_val = config.get('section_a', 'string_val')
@@ -21,7 +24,7 @@ config.set('section_a', 'string_val', 'world')
 # add a new section and some values
 config.add_section('section_b')
 config.set('section_b', 'meal_val', 'spam')
-config.set('section_b', 'not_found_val', 404)
+config.set('section_b', 'not_found_val', '404')
 
 # save to a file
 with open('test_update.ini', 'w') as configfile:

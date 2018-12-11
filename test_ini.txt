@@ -1,5 +1,0 @@
-[Pairplot]
-[Correlation Matrix]
-[Bar Chart]
-[Scatter Plot]
-[PCA]

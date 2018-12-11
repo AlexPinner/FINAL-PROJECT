@@ -72,32 +72,42 @@ def EDA_onSelect(evt):
             #Pairplot
             if(config.has_section('Pairplot')):
                 #use custom vals for fig creation
+                print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
+                print('You selected item %d: "%s"' % (index, value))
         elif(index==1):
             #Correlation matrix
             if(config.has_section('Correlation')):
                 #use custom vals for fig creation
+                print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
+                print('You selected item %d: "%s"' % (index, value))
         elif (index==2):
             #Bar chart
             if(config.has_section('Bar Chart')):
                 #use custom vals for fig creation
+                print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
+                print('You selected item %d: "%s"' % (index, value))
         elif (index==3):
             #Scatter plot
             if(config.has_section('Pairplot_User')):
                 #use custom vals for fig creation
+                print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
+                print('You selected item %d: "%s"' % (index, value))
         elif (index==4):
             #PCA
             if(config.has_section('Pairplot_User')):
                 #use custom vals for fig creation
+                print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
+                print('You selected item %d: "%s"' % (index, value))
 
 def Cleaning_onSelect(evt):
     w = evt.widget
