@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import font
 
 import sys
 if sys.version_info[0] < 3:
@@ -51,7 +52,7 @@ def Len_Max(list_item):
 def Create_Listbox(window, list_items):
     "Returns a listbox created in window and populated with list_items"
 
-    listbox = Listbox(window, width=Len_Max(list_items))
+    listbox = Listbox(window, width=Len_Max(list_items), font=('Fixed',24))
 
     scrollbar = Scrollbar(window, orient=VERTICAL)
     scrollbar.config(command=listbox.yview)
@@ -69,6 +70,8 @@ def EDA_onSelect(evt):
     w = evt.widget
     #print(w.curselection())
     if(w.curselection()):
+        print(w.curselection())
+        update_fig()
         #Get data about current selection
         index = int(w.curselection()[0])
         value = w.get(index)
@@ -93,6 +96,10 @@ def EDA_onSelect(evt):
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
+                data = sns.load_dataset("titanic")
+                data = data.dropna()
+                data = data.corr()
+                graph = sns.heatmap(data=data)
         #Bar chart
         elif (index==2):
             if(config.has_section('Bar Chart')):
@@ -117,11 +124,20 @@ def EDA_onSelect(evt):
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
-        #update the fig object being held in the canvas
+        #access gloabl fig object being stored by canvas and update it
+        #update_fig(graph)
+        """
+        #global fig
+        #fig.clear()
         try:
+            #fig.clear()
             fig = graph.get_figure()
+            print("done1")
         except:
+            #fig.clear()
             fig = graph.fig
+            print("done2")
+            """
 
 def Cleaning_onSelect(evt):
     w = evt.widget
@@ -146,6 +162,12 @@ def Cleaning_onSelect(evt):
         elif (index==4):
             print('You selected item %d: "%s"' % (index, value))
             #Outliers
+
+def update_fig():
+    "Update the fig object being held by canvas to a new graph"
+    global fig
+    fig.clear()
+    print("done clearing???")
 
 #PLACEHOLDER FRAME, DELETE LATER
 class Red_Frame(Frame):
@@ -193,10 +215,11 @@ EDA_Pane.add(right)
 #EDA_Canvas = Red_Frame(EDA_Pane)
 EDA_Canvas = FigureCanvasTkAgg(fig, master=right)
 top = EDA_Canvas.get_tk_widget()
-right.add(top)
+right.add(top, stretch='first')
 #Bottom right item, controls
 EDA_Controls = Red_Frame(EDA_Pane)
 right.add(EDA_Controls)
+
 
 ###############################
 ##Add the tabs to the notebook
