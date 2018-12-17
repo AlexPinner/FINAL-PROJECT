@@ -30,10 +30,13 @@ note = ttk.Notebook(root)
 config = ConfigParser()
 
 #Forward declare figure object for use in canvas
-data = sns.load_dataset("iris")
-data = data.dropna()
-graph = sns.pairplot(data=data, kind="reg")
-fig = graph.fig
+#data = sns.load_dataset("iris")
+#data = data.dropna()
+#graph = sns.pairplot(data=data, kind="reg")
+#fig = graph.fig
+
+fig = Figure()
+a = fig.add_subplot(111)
 
 #Create the EDA listbox list
 EDA_list = ["Pairplot","Correlation Matrix","Bar Chart","Scatter Plot","PCA"]
@@ -52,7 +55,7 @@ def Len_Max(list_item):
 def Create_Listbox(window, list_items):
     "Returns a listbox created in window and populated with list_items"
 
-    listbox = Listbox(window, width=Len_Max(list_items), font=('Fixed',24))
+    listbox = Listbox(window, width=Len_Max(list_items), font=('Fixed',18))
 
     scrollbar = Scrollbar(window, orient=VERTICAL)
     scrollbar.config(command=listbox.yview)
@@ -70,8 +73,8 @@ def EDA_onSelect(evt):
     w = evt.widget
     #print(w.curselection())
     if(w.curselection()):
-        print(w.curselection())
-        update_fig()
+        #print(w.curselection())
+        #clear_fig()
         #Get data about current selection
         index = int(w.curselection()[0])
         value = w.get(index)
@@ -85,9 +88,14 @@ def EDA_onSelect(evt):
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
-                data = sns.load_dataset("iris")
-                data = data.dropna()
-                graph = sns.pairplot(data=data, kind="reg")
+                #data = sns.load_dataset("iris")
+                #data = data.dropna()
+                #graph = sns.pairplot(data=data, kind="reg")
+                xList=[1,2,3,4]
+                yList=[2,4,8,16]
+                a.clear()
+                a.plot(xList, yList)
+                EDA_Canvas.draw()
         #Correlation matrix
         elif(index==1):
             if(config.has_section('Correlation')):
@@ -99,7 +107,13 @@ def EDA_onSelect(evt):
                 data = sns.load_dataset("titanic")
                 data = data.dropna()
                 data = data.corr()
-                graph = sns.heatmap(data=data)
+                xList=[1,2,3,4,5,6,7,8]
+                yList=[2,4,8,16,24,32,48,32]
+                fig.clear()
+                a.clear()
+                #a.plot(xList, yList)
+                sns.heatmap(data=data,ax=a)
+                EDA_Canvas.draw()
         #Bar chart
         elif (index==2):
             if(config.has_section('Bar Chart')):
@@ -163,11 +177,11 @@ def Cleaning_onSelect(evt):
             print('You selected item %d: "%s"' % (index, value))
             #Outliers
 
-def update_fig():
-    "Update the fig object being held by canvas to a new graph"
+def clear_fig():
+    "Clear the fig object being held by the EDA canvas"
     global fig
     fig.clear()
-    print("done clearing???")
+    #print("done clearing???")
 
 #PLACEHOLDER FRAME, DELETE LATER
 class Red_Frame(Frame):
