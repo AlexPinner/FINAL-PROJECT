@@ -80,6 +80,7 @@ graph = sns.swarmplot(x="species", y="petal_length", data=iris)
 fig = graph.get_figure()
 """
 
+"""
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -115,5 +116,6 @@ toolbar.update()
 canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
 
 ani = animation.FuncAnimation(f, animate, interval=1000)
+"""
 
 my_window.mainloop()

@@ -30,13 +30,10 @@ note = ttk.Notebook(root)
 config = ConfigParser()
 
 #Forward declare figure object for use in canvas
-#data = sns.load_dataset("iris")
-#data = data.dropna()
-#graph = sns.pairplot(data=data, kind="reg")
-#fig = graph.fig
-
-fig = Figure()
-#a = fig.add_subplot(111)
+data = sns.load_dataset("iris")
+data = data.dropna()
+graph = sns.pairplot(data=data, kind="reg")
+fig = graph.fig
 
 #Create the EDA listbox list
 EDA_list = ["Pairplot","Correlation Matrix","Bar Chart","Scatter Plot","PCA"]
@@ -55,11 +52,11 @@ def Len_Max(list_item):
 def Create_Listbox(window, list_items):
     "Returns a listbox created in window and populated with list_items"
 
-    listbox = Listbox(window, width=Len_Max(list_items), font=('Fixed', 14))
+    listbox = Listbox(window, width=Len_Max(list_items), font=('Fixed',24))
 
     scrollbar = Scrollbar(window, orient=VERTICAL)
     scrollbar.config(command=listbox.yview)
-    scrollbar.pack(side=RIGHT, fill=Y) #always pack scrollbar before listbox
+    scrollbar.pack(side=RIGHT, fill=Y)
     
     listbox.config(yscrollcommand=scrollbar.set)
     listbox.pack(side=LEFT, fill=BOTH, expand=1) #always pack scrollbar before listbox
@@ -74,12 +71,12 @@ def EDA_onSelect(evt):
     #print(w.curselection())
     if(w.curselection()):
         #print(w.curselection())
-        #clear_fig()
-        #Get data about current selection
+        #Get current selection information
         index = int(w.curselection()[0])
         value = w.get(index)
         #Read ini file to check for presets
         config.read('test.ini')
+        global fig
         #Pairplot
         if(index==0):
             if(config.has_section('Pairplot')):
@@ -88,15 +85,12 @@ def EDA_onSelect(evt):
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
-                #data = sns.load_dataset("iris")
-                #data = data.dropna()
-                #graph = sns.pairplot(data=data, kind="reg")
-                xList=[1,2,3,4]
-                yList=[2,4,8,16]
+                data = sns.load_dataset("iris")
+                data = data.dropna()
+                graph = sns.pairplot(data=data, kind="reg")
+                #update_fig(graph)
                 fig.clear()
-                a = fig.add_subplot(111)
-                a.plot(xList, yList)
-                EDA_Canvas.draw()
+                #fig = graph.fig
         #Correlation matrix
         elif(index==1):
             if(config.has_section('Correlation')):
@@ -104,13 +98,14 @@ def EDA_onSelect(evt):
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
+                print('You selected item %d: "%s"' % (index, value))
                 data = sns.load_dataset("titanic")
                 data = data.dropna()
                 data = data.corr()
+                graph = sns.heatmap(data=data)
+                #update_fig(graph)
                 fig.clear()
-                a = fig.add_subplot(111)
-                sns.heatmap(data=data, ax=a)
-                EDA_Canvas.draw()
+                fig = graph.get_figure()
         #Bar chart
         elif (index==2):
             if(config.has_section('Bar Chart')):
@@ -118,12 +113,7 @@ def EDA_onSelect(evt):
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
-                data = sns.load_dataset("flights")
-                data = data.dropna()
-                fig.clear()
-                a = fig.add_subplot(111)
-                sns.barplot(data=data, x='month', y='passengers', ci=None, ax=a)
-                EDA_Canvas.draw()
+                print('You selected item %d: "%s"' % (index, value))
         #Scatter plot
         elif (index==3):
             if(config.has_section('Pairplot_User')):
@@ -131,13 +121,7 @@ def EDA_onSelect(evt):
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
-                data = sns.load_dataset("tips")
-                data = data.dropna()
-                fig.clear()
-                a = fig.add_subplot(111)
-                #WHY DOES THIS RESIZE THE WINDOW AND LOSE FONT SETTINGS????
-                sns.regplot(data=data, x='total_bill', y='tip', ax=a)
-                EDA_Canvas.draw()
+                print('You selected item %d: "%s"' % (index, value))
         #PCA
         elif (index==4):
             if(config.has_section('Pairplot_User')):
@@ -147,6 +131,8 @@ def EDA_onSelect(evt):
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
 
+        #access gloabl fig object being stored by canvas and update it
+        #update_fig(graph)
 
 def Cleaning_onSelect(evt):
     w = evt.widget
@@ -171,6 +157,18 @@ def Cleaning_onSelect(evt):
         elif (index==4):
             print('You selected item %d: "%s"' % (index, value))
             #Outliers
+
+def update_fig(new_graph):
+    "Update the fig object being held by canvas to a new graph"
+    global fig
+    fig.clear()
+    print("done clearing???")
+    try:
+        fig = new_graph.get_figure()
+        print("done1")
+    except:
+        fig = new_graph.fig
+        print("done2")
 
 #PLACEHOLDER FRAME, DELETE LATER
 class Red_Frame(Frame):

@@ -8,7 +8,7 @@ print(sns.get_dataset_names())
 
 
 #PAIRPLOT
-data = sns.load_dataset("titanic")
+data = sns.load_dataset("tips")
 data = data.dropna()
 #data['month'], _ = pd.factorize(data['month'])
 data.info()
@@ -17,12 +17,14 @@ print(data)
 #sns.pairplot(data=data, kind="reg")
 #plt.show()
 
+#sns.barplot(data=data, x='month', y='passengers', ci=None)
+sns.regplot(x=data["total_bill"], y=data["tip"])
 
 #HEATMAP
 #data = sns.load_dataset("dots")
 #data.dropna()
 #data.info()
 #print(data)
-data = data.corr()
-sns.heatmap(data=data)
+#data = data.corr()
+#sns.heatmap(data=data)
 plt.show()
