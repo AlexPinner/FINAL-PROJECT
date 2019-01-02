@@ -129,7 +129,7 @@ right.add(top)
 
 data = sns.load_dataset("iris")
 data = data.dropna()
-graph = sns.pairplot(data=data, kind="reg")
+#graph = sns.pairplot(data=data, kind="reg")
 fig = graph.fig
 
 canvas = FigureCanvasTkAgg(fig, master=right)

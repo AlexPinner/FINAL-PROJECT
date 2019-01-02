@@ -18,7 +18,7 @@ print(data)
 #plt.show()
 
 #sns.barplot(data=data, x='month', y='passengers', ci=None)
-sns.regplot(x=data["total_bill"], y=data["tip"])
+sns.lmplot(data=data, x="total_bill", y="tip")
 
 #HEATMAP
 #data = sns.load_dataset("dots")

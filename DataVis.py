@@ -126,26 +126,35 @@ def EDA_onSelect(evt):
                 EDA_Canvas.draw()
         #Scatter plot
         elif (index==3):
-            if(config.has_section('Pairplot_User')):
+            if(config.has_section('Scatter Plot')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
+                print('You selected item %d: "%s"' % (index, value))
                 data = sns.load_dataset("tips")
                 data = data.dropna()
                 fig.clear()
                 a = fig.add_subplot(111)
-                #WHY DOES THIS RESIZE THE WINDOW AND LOSE FONT SETTINGS????
-                sns.regplot(data=data, x='total_bill', y='tip', ax=a)
+                ##plot = sns.lmplot(data=data, x="total_bill", y="tip")
+                #sns.regplot(data=data, x='total_bill', y='tip', ax=a)
+                #sns.residplot(x=data['total_bill'], y=data['tip'], ax=a)
+                ##plot.savefig('plot.png')
+                ##img = Image.open('plot.png')
+                #filename = ImageTk.PhotoImage(img)
+                ##a.imshow(img)
                 EDA_Canvas.draw()
         #PCA
         elif (index==4):
-            if(config.has_section('Pairplot_User')):
+            if(config.has_section('PCA')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
+                fig.clear()
+                #EDA_Listbox.configure(font=('Fixed', 14))
+                EDA_Canvas.draw()
 
 
 def Cleaning_onSelect(evt):
