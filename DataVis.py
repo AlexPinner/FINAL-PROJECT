@@ -14,6 +14,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import matplotlib.image as mpimg
 
 try:
     from configparser import ConfigParser
@@ -22,6 +23,12 @@ except ImportError:
 
 #Create main window
 root = Tk.Tk()
+
+print(font.names())
+myfont = font.nametofont('TkDefaultFont')
+myfont.configure(size=24)
+data = sns.load_dataset('Iris')
+sns.pairplot(data=data)
 
 #Create notebook (thing that controls the tabs)
 note = ttk.Notebook(root)
@@ -54,8 +61,8 @@ def Len_Max(list_item):
 
 def Create_Listbox(window, list_items):
     "Returns a listbox created in window and populated with list_items"
-
-    listbox = Listbox(window, width=Len_Max(list_items), font=('Fixed', 14))
+    #font=('Fixed', 14) #stick this in Listbox() after width=...
+    listbox = Listbox(window, width=Len_Max(list_items))
 
     scrollbar = Scrollbar(window, orient=VERTICAL)
     scrollbar.config(command=listbox.yview)
@@ -88,14 +95,18 @@ def EDA_onSelect(evt):
             else:
                 #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
-                #data = sns.load_dataset("iris")
-                #data = data.dropna()
-                #graph = sns.pairplot(data=data, kind="reg")
-                xList=[1,2,3,4]
-                yList=[2,4,8,16]
+                data = sns.load_dataset('Iris')
+                data = data.dropna()
+                pp = sns.pairplot(data=data, kind='reg')
+                pp.savefig('pp.png')
+                #xList=[1,2,3,4]
+                #yList=[2,4,8,16]
                 fig.clear()
                 a = fig.add_subplot(111)
-                a.plot(xList, yList)
+                img_arr = mpimg.imread('pp.png')
+                a.imshow(img_arr)
+                a.axis('off')
+                #a.plot(xList, yList)
                 EDA_Canvas.draw()
         #Correlation matrix
         elif(index==1):
@@ -134,8 +145,13 @@ def EDA_onSelect(evt):
                 print('You selected item %d: "%s"' % (index, value))
                 data = sns.load_dataset("tips")
                 data = data.dropna()
+                sp = sns.lmplot(data=data, x="total_bill", y="tip")
+                sp.savefig('sp.png')
                 fig.clear()
                 a = fig.add_subplot(111)
+                img_arr = mpimg.imread('sp.png')
+                a.imshow(img_arr)
+                a.axis('off')
                 ##plot = sns.lmplot(data=data, x="total_bill", y="tip")
                 #sns.regplot(data=data, x='total_bill', y='tip', ax=a)
                 #sns.residplot(x=data['total_bill'], y=data['tip'], ax=a)
@@ -155,6 +171,10 @@ def EDA_onSelect(evt):
                 fig.clear()
                 #EDA_Listbox.configure(font=('Fixed', 14))
                 EDA_Canvas.draw()
+        #print('Tabs are: ', note.children.keys())
+        #print('Active tab: ', note.select())
+        #tabfont = font.Font(font=note.children[EDA]['font'])
+        #print(tabfont.actual())
 
 
 def Cleaning_onSelect(evt):
@@ -164,7 +184,7 @@ def Cleaning_onSelect(evt):
         index = int(w.curselection()[0])
         value = w.get(index)
         #switch case instead of this print
-        print('You selected item %d: "%s"' % (index, value))
+        #print('You selected item %d: "%s"' % (index, value))
         if(index==0):
             print('You selected item %d: "%s"' % (index, value))
             #Find and replace

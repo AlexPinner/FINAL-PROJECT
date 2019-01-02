@@ -79,7 +79,7 @@ img_arr = mpimg.imread('pp.png')
 a.imshow(img_arr)
 #a.set_xticks([])
 #a.set_yticks([])
-#a.axis('off')
+a.axis('off')
 
 canvas = FigureCanvasTkAgg(f, master=root)
 canvas.draw()
