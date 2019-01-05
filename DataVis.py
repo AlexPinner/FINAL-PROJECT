@@ -87,6 +87,12 @@ def EDA_onSelect(evt):
         value = w.get(index)
         #Read ini file to check for presets
         config.read('test.ini')
+        fig.clear()
+        a = fig.add_subplot(111)
+        img_arr = mpimg.imread('PSB.png')
+        a.imshow(img_arr)
+        a.axis('off')
+        EDA_Canvas.draw()
         #Pairplot
         if(index==0):
             if(config.has_section('Pairplot')):
