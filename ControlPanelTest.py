@@ -1,17 +1,7 @@
 from tkinter import *
 
-
 def raise_frame(frame):
     frame.tkraise()
-
-
-class Red_Frame(Frame):
-    def __init__(self, the_window):
-        super().__init__()
-        self["height"] = 150
-        self["width"] = 150
-        self["bg"] = "red"
-
 
 root = Tk()
 
@@ -51,7 +41,6 @@ Button(bp_listbox, text='Bar Plot', command=lambda: raise_frame(bp_frame)).pack(
 Label(sp_frame, text='lmplot').pack()
 Button(sp_listbox, text='Scatter Plot', command=lambda: raise_frame(sp_frame)).pack()
 
-#group like this for functions?
 """
 Label(pp_frame, text='facetgrid').pack()
 Label(cm_frame, text='heatmap').pack()
@@ -65,4 +54,5 @@ Button(sp_listbox, text='Scatter Plot', command=lambda: raise_frame(sp_frame)).p
 """
 
 raise_frame(pp_frame)
+
 root.mainloop()
