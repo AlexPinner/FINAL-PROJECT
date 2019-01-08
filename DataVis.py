@@ -24,7 +24,7 @@ except ImportError:
 #Create main window
 root = Tk.Tk()
 
-print(font.names())
+#print(font.names()) #all available fonts
 myfont = font.nametofont('TkDefaultFont')
 myfont.configure(size=24)
 data = sns.load_dataset('Iris')
@@ -78,63 +78,93 @@ def Create_Listbox(window, list_items):
 
 def EDA_onSelect(evt):
     w = evt.widget
-    #print(w.curselection())
     if(w.curselection()):
-        #print(w.curselection())
-        #clear_fig()
         #Get data about current selection
         index = int(w.curselection()[0])
         value = w.get(index)
-        #Read ini file to check for presets
-        config.read('test.ini')
+        #Check ini for graph settings
+        config.read('datavis.ini')
+        #Display 'please stand by' image
         fig.clear()
         a = fig.add_subplot(111)
         img_arr = mpimg.imread('PSB.png')
         a.imshow(img_arr)
         a.axis('off')
         EDA_Canvas.draw()
-        #Pairplot
-        if(index==0):
-            if(config.has_section('Pairplot')):
-                #use custom vals for fig creation
-                print('You selected item %d: "%s"' % (index, value))
-            else:
-                #go with default fig creation
-                print('You selected item %d: "%s"' % (index, value))
-                data = sns.load_dataset('Iris')
+
+        if(index==0): #pairplot
+            if(config.has_section('pairplot') and config.has_section('general')): #use custom vals for fig creation
+                #import user data set
+                data_loc = config.get('general', 'dataset_location')
+                data = pd.read_csv(data_loc, encoding='latin-1')
                 data = data.dropna()
-                pp = sns.pairplot(data=data, kind='reg')
+                #import user graph settings
+                pp_hue = config.get('pairplot', 'hue') #which column determines color of points
+                pp_vars = config.get('pairplot', 'vars') #which columns to use in plot
+                pp_kind = config.get('pairplot', 'kind') #fit regression line?
+                pp_diag_kind = config.get('pairplot', 'diag_kind') #which graphs to use along diagonal
+                #create and display custom graph
+                pp = sns.pairplot(data=data, hue=pp_hue, vars=pp_vars, kind=pp_kind, diag_kind=pp_diag_kind)
                 pp.savefig('pp.png')
-                #xList=[1,2,3,4]
-                #yList=[2,4,8,16]
                 fig.clear()
                 a = fig.add_subplot(111)
                 img_arr = mpimg.imread('pp.png')
                 a.imshow(img_arr)
                 a.axis('off')
-                #a.plot(xList, yList)
                 EDA_Canvas.draw()
-        #Correlation matrix
-        elif(index==1):
-            if(config.has_section('Correlation')):
-                #use custom vals for fig creation
-                print('You selected item %d: "%s"' % (index, value))
-            else:
-                #go with default fig creation
-                data = sns.load_dataset("titanic")
+            else: #go with default fig creation
+                data = sns.load_dataset('Iris')
+                data = data.dropna()
+                pp = sns.pairplot(data=data, kind='reg', hue='species')
+                pp.savefig('pp.png')
+                fig.clear()
+                a = fig.add_subplot(111)
+                img_arr = mpimg.imread('pp.png')
+                a.imshow(img_arr)
+                a.axis('off')
+                EDA_Canvas.draw()
+        elif(index==1): #correlation matrix
+            if(config.has_section('correlation') and config.has_section('general')): #use custom vals for fig creation
+                #import user data set
+                data_loc = config.get('general', 'dataset_location')
+                data = pd.read_csv(data_loc, encoding='latin-1')
+                data = data.dropna()
+                data = data.corr()
+                #import user graph settings
+                cm_annot = config.getboolean('correlation', 'annot') #print numbers in cells?
+                cm_cbar = config.getboolean('correlation', 'cbar') #show colobar?
+                cm_square = config.getboolean('correlation', 'square') #make cells square?
+                fig.clear()
+                a = fig.add_subplot(111)
+                #create and display custom graph
+                sns.heatmap(data=data, annot=cm_annot, cbar=cm_cbar, square=cm_square, ax=a)
+                EDA_Canvas.draw()
+            else: #go with default fig creation
+                data = sns.load_dataset('titanic')
                 data = data.dropna()
                 data = data.corr()
                 fig.clear()
                 a = fig.add_subplot(111)
                 sns.heatmap(data=data, ax=a)
                 EDA_Canvas.draw()
-        #Bar chart
-        elif (index==2):
-            if(config.has_section('Bar Chart')):
-                #use custom vals for fig creation
-                print('You selected item %d: "%s"' % (index, value))
-            else:
-                #go with default fig creation
+        elif (index==2): #bar chart
+            if(config.has_section('bar') and config.has_section('general')): #use custom vals for fig creation
+                #import user data set
+                data_loc = config.get('general', 'dataset_location')
+                data = pd.read_csv(data_loc, encoding='latin-1')
+                data = data.dropna()
+                #import user graph settings
+                bp_x = config.get('bar', 'x') #x var
+                bp_y = config.get('bar', 'y') #y var
+                bp_hue = config.get('bar', 'hue') #hue column
+                bp_ci = config.get('bar', 'ci') #confidence intervals
+                bp_orient = config.get('bar', 'orient') #vertical or horizontal
+                fig.clear()
+                a = fig.add_subplot(111)
+                #create and display custom graph
+                sns.barplot(data=data, x=bp_x, y=bp_y, hue=bp_hue, ci=bp_ci, orient=bp_orient, ax=a)
+                EDA_Canvas.draw()
+            else: #go with default fig creation
                 data = sns.load_dataset("flights")
                 data = data.dropna()
                 fig.clear()
@@ -143,15 +173,30 @@ def EDA_onSelect(evt):
                 EDA_Canvas.draw()
         #Scatter plot
         elif (index==3):
-            if(config.has_section('Scatter Plot')):
-                #use custom vals for fig creation
-                print('You selected item %d: "%s"' % (index, value))
-            else:
-                #go with default fig creation
+            if(config.has_section('scatter') and config.has_section('general')): #use custom vals for fig creation
+                #import user data set
+                data = config.get('general', 'dataset_location')
+                data = data.dropna()
+                #import user graph settings
+                sp_x = config.get('scatter', 'x') #x var
+                sp_y = config.get('scatter', 'y') #y var
+                sp_hue = config.get('scatter', 'hue') #hue column
+                sp_legend = config.getboolean('scatter', 'legend') #display legend?
+                sp_fit_reg = config.get('scatter', 'fit_reg') #fit linear regression line?
+                #create and display custom graph
+                sp = sns.lmplot(data=data, x=sp_x, y=sp_y, hue=sp_hue, fit_reg=sp_fit_reg)
+                sp.savefig('sp.png')
+                fig.clear()
+                a = fig.add_subplot(111)
+                img_arr = mpimg.imread('sp.png')
+                a.imshow(img_arr)
+                a.axis('off')
+                EDA_Canvas.draw()
+            else: #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
                 data = sns.load_dataset("tips")
                 data = data.dropna()
-                sp = sns.lmplot(data=data, x="total_bill", y="tip")
+                sp = sns.lmplot(data=data, x="total_bill", y="tip", scatter=False)
                 sp.savefig('sp.png')
                 fig.clear()
                 a = fig.add_subplot(111)
@@ -168,7 +213,7 @@ def EDA_onSelect(evt):
                 EDA_Canvas.draw()
         #PCA
         elif (index==4):
-            if(config.has_section('PCA')):
+            if(config.has_section('PCA') and config.has_section('general')):
                 #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
             else:
