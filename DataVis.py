@@ -171,8 +171,7 @@ def EDA_onSelect(evt):
                 a = fig.add_subplot(111)
                 sns.barplot(data=data, x='month', y='passengers', ci=None, ax=a)
                 EDA_Canvas.draw()
-        #Scatter plot
-        elif (index==3):
+        elif (index==3): #scatter plot
             if(config.has_section('scatter') and config.has_section('general')): #use custom vals for fig creation
                 #import user data set
                 data = config.get('general', 'dataset_location')
@@ -182,9 +181,10 @@ def EDA_onSelect(evt):
                 sp_y = config.get('scatter', 'y') #y var
                 sp_hue = config.get('scatter', 'hue') #hue column
                 sp_legend = config.getboolean('scatter', 'legend') #display legend?
+                sp_scatter = config.getboolean('scatter', 'scatter') #draw scatter?
                 sp_fit_reg = config.get('scatter', 'fit_reg') #fit linear regression line?
                 #create and display custom graph
-                sp = sns.lmplot(data=data, x=sp_x, y=sp_y, hue=sp_hue, fit_reg=sp_fit_reg)
+                sp = sns.lmplot(data=data, x=sp_x, y=sp_y, hue=sp_hue, legend=sp_legend, scatter=sp_scatter, fit_reg=sp_fit_reg)
                 sp.savefig('sp.png')
                 fig.clear()
                 a = fig.add_subplot(111)
@@ -193,39 +193,23 @@ def EDA_onSelect(evt):
                 a.axis('off')
                 EDA_Canvas.draw()
             else: #go with default fig creation
-                print('You selected item %d: "%s"' % (index, value))
                 data = sns.load_dataset("tips")
                 data = data.dropna()
-                sp = sns.lmplot(data=data, x="total_bill", y="tip", scatter=False)
+                sp = sns.lmplot(data=data, x="total_bill", y="tip")
                 sp.savefig('sp.png')
                 fig.clear()
                 a = fig.add_subplot(111)
                 img_arr = mpimg.imread('sp.png')
                 a.imshow(img_arr)
                 a.axis('off')
-                ##plot = sns.lmplot(data=data, x="total_bill", y="tip")
-                #sns.regplot(data=data, x='total_bill', y='tip', ax=a)
-                #sns.residplot(x=data['total_bill'], y=data['tip'], ax=a)
-                ##plot.savefig('plot.png')
-                ##img = Image.open('plot.png')
-                #filename = ImageTk.PhotoImage(img)
-                ##a.imshow(img)
                 EDA_Canvas.draw()
-        #PCA
-        elif (index==4):
-            if(config.has_section('PCA') and config.has_section('general')):
-                #use custom vals for fig creation
+        elif (index==4): #pca
+            if(config.has_section('PCA') and config.has_section('general')): #use custom vals for fig creation
                 print('You selected item %d: "%s"' % (index, value))
-            else:
-                #go with default fig creation
+            else: #go with default fig creation
                 print('You selected item %d: "%s"' % (index, value))
                 fig.clear()
-                #EDA_Listbox.configure(font=('Fixed', 14))
                 EDA_Canvas.draw()
-        #print('Tabs are: ', note.children.keys())
-        #print('Active tab: ', note.select())
-        #tabfont = font.Font(font=note.children[EDA]['font'])
-        #print(tabfont.actual())
 
 
 def Cleaning_onSelect(evt):
