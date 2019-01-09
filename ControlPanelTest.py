@@ -1,5 +1,10 @@
 from tkinter import *
 
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser  # ver. < 3.0
+
 def raise_frame(frame):
     frame.tkraise()
 
@@ -29,7 +34,18 @@ for frame in (pp_frame, cm_frame, bp_frame, sp_frame):
 for frame in (pp_listbox, cm_listbox, bp_listbox, sp_listbox):
     frame.pack()
 
+def Update_Data_Loc(string):
+    "Saves updated data location to ini"
+    config = ConfigParser()
+    config.read('datavis.ini')
+    config.set('general', 'dataset_location', string)
+    with open('datavis.ini', 'w') as configfile:
+        config.write(configfile)
+
 Label(pp_frame, text='facetgrid').pack()
+data_loc_entry = Entry(pp_frame)
+data_loc_entry.pack()
+Button(pp_frame, text='commit address', command=lambda: Update_Data_Loc(data_loc_entry.get())).pack()
 Button(pp_listbox, text='Pairplot', command=lambda: raise_frame(pp_frame)).pack()
 
 Label(cm_frame, text='heatmap').pack()
