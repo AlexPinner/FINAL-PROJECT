@@ -116,24 +116,25 @@ def Select_Dataset():
     filename = filedialog.askopenfilename(initialdir="/", title="Select Dataset", filetypes=(
         ("csv files", "*.csv"), ("xls files", "*.xls"), ("all files", "*.*")))
     config.read('datavis.ini')
-    if config.getboolean('general', 'settings_reset_warning'): # ask again?
-        if Settings_Reset_Warning(): # continue?
-            Update_Data_Loc(filename)
-            print('tr')
+    curr = config.get('general', 'dataset_location')
+    if filename and (curr != filename):  # new dataset?
+        if config.getboolean('general', 'settings_reset_warning'):  # ask again?
+            if Settings_Reset_Warning():  # continue?
+                Update_Data_Loc(filename)  # change dataset
+
 
 def Update_Data_Loc(string):
     "Saves updated data location to ini"
     config = ConfigParser()
-
     config.read('datavis.ini')
     config.set('general', 'dataset_location', string)
     with open('datavis.ini', 'w') as configfile:
         config.write(configfile)
 
 
-def Reset_ini(degree): #FINISH ME
+def Reset_ini(degree):  # FINISH ME
     "Reset ini to various degrees. 0 is all settings. 1 is only settings affected by dataset changes."
-    if degree == 0: # full reset
+    if degree == 0:  # full reset
         pass
     else:  # partial reset
         pass
@@ -313,8 +314,8 @@ def Cleaning_onSelect(evt):
         elif (index == 4):  # outliers
             print('You selected item %d: "%s"' % (index, value))
 
-# PLACEHOLDER FRAME, DELETE LATER
-class Red_Frame(Frame):
+
+class Red_Frame(Frame): # PLACEHOLDER FRAME, DELETE LATER
     def __init__(self, the_window):
         super().__init__()
         self["height"] = 150
