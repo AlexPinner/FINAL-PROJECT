@@ -315,12 +315,28 @@ def Cleaning_onSelect(evt):
             print('You selected item %d: "%s"' % (index, value))
 
 
-class Red_Frame(Frame): # PLACEHOLDER FRAME, DELETE LATER
+class Red_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
     def __init__(self, the_window):
         super().__init__()
         self["height"] = 150
         self["width"] = 150
         self["bg"] = "red"
+
+
+class PP_Frame(Frame):
+    def __init__(self, the_window):
+        super().__init__()
+    config.read('datavis.ini')
+    data_loc = config.get('general', 'dataset_location')
+    data = pd.read_csv(data_loc, encoding='latin-1')
+    # which column determines color of points
+    pp_hue = config.get('pairplot', 'hue')
+    # which columns to use in plot
+    pp_vars = config.get('pairplot', 'vars')
+    # fit regression line?
+    pp_kind = config.get('pairplot', 'kind')
+    # which graphs to use along diagonal
+    pp_diag_kind = config.get('pairplot', 'diag_kind')
 
 
 #################
