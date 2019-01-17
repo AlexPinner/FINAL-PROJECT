@@ -448,21 +448,33 @@ class PP_Frame(Frame):
             if not config.has_section('pairplot'):
                 config.add_section('pairplot')
 
-            config.set('pairplot', 'hue', pp_hue.get())
+            apply_hue = pp_hue.get()
+            config.set('pairplot', 'hue', apply_hue)
+            if apply_hue == 'None':
+                apply_hue = None
+            #print(apply_hue)
 
             items = vars_listbox.curselection()
-            items = [numeric_columns_list[int(item)] for item in items]
-            config.set('pairplot', 'vars', ','.join(items))
+            apply_vars = [numeric_columns_list[int(item)] for item in items]
+            config.set('pairplot', 'vars', ','.join(apply_vars))
             # ','.join(map(str, myList)) this does the same thing but for lists of ints
+            if apply_vars == []:
+                apply_vars = None
+            #print(apply_vars)
 
-            config.set('pairplot', 'kind', pp_kind.get())
+            apply_kind = pp_kind.get()
+            config.set('pairplot', 'kind', apply_kind)
+            #print(apply_kind)
 
-            config.set('pairplot', 'diag_kind', pp_diag_kind.get())
+            apply_diag_kind = pp_diag_kind.get()
+            config.set('pairplot', 'diag_kind', apply_diag_kind)
+            #print(apply_diag_kind)
 
             with open('datavis.ini', 'w') as configfile:
                 config.write(configfile)
             configfile.close()
-            pp = sns.pairplot(data=data, hue=pp_hue.get(), vars=items, kind=pp_kind.get(), diag_kind=pp_diag_kind.get())
+
+            pp = sns.pairplot(data=data, hue=apply_hue, vars=apply_vars, kind=apply_kind, diag_kind=apply_diag_kind)
             pp.savefig('pp.png')
             fig.clear()
             a = fig.add_subplot(111)
