@@ -50,6 +50,8 @@ pp_hue_option = OptionMenu(
 pp_hue_option.pack()
 
 def apply_on_select():
+    # should on apply change what the graph looks like or should that happen before the apply so user can preview the changes? 
+    # Letting them preview will be slow since every change will require re-creating the graphs
     config.set('pairplot', 'hue', pp_hue.get())
     #rest of settings here
     with open('controls_test.ini', 'w') as configfile:

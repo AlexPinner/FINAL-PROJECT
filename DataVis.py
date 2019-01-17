@@ -166,13 +166,21 @@ def EDA_onSelect(evt):
                 # import user graph settings
                 # which column determines color of points
                 pp_hue = config.get('pairplot', 'hue')
+                if pp_hue == 'None':
+                    pp_hue = None
+                print('Hue: ', pp_hue)
                 # which columns to use in plot
-                pp_vars = config.get('pairplot', 'vars')
+                pp_vars = config.get('pairplot', 'vars').split(',')
+                if pp_vars == ['None'] or pp_vars == ['']:
+                    pp_vars=None
+                print('Vars: ', pp_vars)
                 # fit regression line?
                 pp_kind = config.get('pairplot', 'kind')
+                print('Kind: ', pp_kind)
                 # which graphs to use along diagonal
                 pp_diag_kind = config.get('pairplot', 'diag_kind')
                 # create and display custom graph
+                print('Diag_Kind: ', pp_diag_kind)
                 pp = sns.pairplot(data=data, hue=pp_hue, vars=pp_vars,
                                   kind=pp_kind, diag_kind=pp_diag_kind)
                 pp.savefig('pp.png')
@@ -324,19 +332,125 @@ class Red_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
 
 
 class PP_Frame(Frame):
-    def __init__(self, the_window):
+    def __init__(self, parent):
         super().__init__()
-    config.read('datavis.ini')
-    data_loc = config.get('general', 'dataset_location')
-    data = pd.read_csv(data_loc, encoding='latin-1')
-    # which column determines color of points
-    pp_hue = config.get('pairplot', 'hue')
-    # which columns to use in plot
-    pp_vars = config.get('pairplot', 'vars')
-    # fit regression line?
-    pp_kind = config.get('pairplot', 'kind')
-    # which graphs to use along diagonal
-    pp_diag_kind = config.get('pairplot', 'diag_kind')
+
+        config.read('datavis.ini')
+        data_loc = config.get('general', 'dataset_location')
+        data = pd.read_csv(data_loc, encoding='latin-1')
+
+        # need column list for the optionMenu for both pp hue and vars
+        columns = data.columns
+        numeric_columns=data.select_dtypes(exclude=['object'])
+        columns_list = list()
+        numeric_columns_list = list()
+
+        for column in columns:
+            columns_list.append(column)
+
+        for column in numeric_columns:
+            numeric_columns_list.append(column)
+
+        # set pairplot settings to defaults
+        # which column determines color of points
+        pp_hue = Variable(value='None')
+        # which columns to use in plot
+        pp_vars = None
+        # fit regression line?
+        pp_kind = Variable(value='scatter')
+        # which graphs to use along diagonal
+        pp_diag_kind = Variable(value='hist')
+        diag_kind_list = list(['auto', 'hist', 'kde'])
+
+        # set pp settings to previous user settings if applicable
+        if config.has_section('pairplot'):
+            if config.has_option('pairplot', 'hue'):
+                pp_hue = Variable(value=config.get('pairplot', 'hue'))
+            if config.has_option('pairplot', 'vars'):
+                pp_vars = config.get('pairplot', 'vars').split(',')
+                if pp_vars == 'None' or pp_vars == ['']:
+                    pp_vars=None
+            if config.has_option('pairplot', 'kind'):
+                pp_kind = Variable(value=config.get('pairplot', 'kind'))
+            if config.has_option('pairplot', 'diag_kind'):
+                pp_diag_kind = Variable(value=config.get('pairplot', 'diag_kind'))
+
+        pad_size = 10
+
+        vars_label = Label(self, text='Which columns will be used in plot?')
+        vars_label.grid(row=0, column=0, padx=pad_size)
+
+        vars_listbox = Listbox(self, selectmode=MULTIPLE, justify=CENTER)
+        for column in numeric_columns_list:
+            vars_listbox.insert(END, column)
+        vars_listbox.select_set(0, END)  # all columns selected by default
+        # update this select_set to go off of which vars from the column list are on
+        # based on whats in the ini (pp_vars) instead of just selecting all
+        vars_listbox.grid(row=1, column=0)
+
+        hue_label = Label(self, text='Which column determines color grouping?')
+        hue_label.grid(row=0, column=1, padx=pad_size)
+
+        hue_option = Tk.OptionMenu(self, pp_hue, 'None', *columns_list)
+        hue_option.grid(row=1, column=1)
+
+        kind_label = Label(self, text='Fit regression line?')
+        kind_label.grid(row=0, column=2, padx=pad_size)
+
+        def update_text():
+            kind_checkbox.config(text=str(pp_kind.get()))
+
+        kind_checkbox = Checkbutton(
+            self, variable=pp_kind, onvalue='reg', offvalue='scatter', command=update_text, relief=RAISED)
+        kind_checkbox.grid(row=1, column=2)
+        update_text()
+
+        diag_kind_label = Label(self, text='Which graph type along diagonal?')
+        diag_kind_label.grid(row=0, column=3, padx=pad_size)
+
+        diag_kind_option = Tk.OptionMenu(
+            self, pp_diag_kind, *diag_kind_list)
+        diag_kind_option.grid(row=1, column=3)
+
+        # add preview button as well as apply button
+        # since updating the graph as the user makes changes would be too slow
+        # but they may want to preview their changes rather than just applying off the bat
+        def preview_on_select():
+            print('previewed')
+            # may have to make graph drawing a seperate function at some point since graphs will be drawn by listbox on select using ini settings, or here without using the ini settings
+            # the apply on select may as well select a listbox index just to recall the listbox on select graph redraw since it just updated the ini that will be used by the listbox redrawing
+            # but for this preview it will be based on the current settings and not ini
+            # could also just leave it as is and avoid complex function nonsense
+
+        def apply_on_select():
+            if not config.has_section('pairplot'):
+                config.add_section('pairplot')
+            # hue
+            config.set('pairplot', 'hue', pp_hue.get())
+            # vars
+            items = vars_listbox.curselection()
+            items = [numeric_columns_list[int(item)] for item in items]
+            config.set('pairplot', 'vars', ','.join(items))
+            # ','.join(map(str, myList)) this does the same thing but for lists of ints
+            # kind
+            config.set('pairplot', 'kind', pp_kind.get())
+            # diag_kind
+            config.set('pairplot', 'diag_kind', pp_diag_kind.get())
+
+            with open('datavis.ini', 'w') as configfile:
+                config.write(configfile)
+            EDA_Listbox.select_set(0)
+
+        button_frame = Frame(self)
+        button_frame.grid(row=1, column=4)
+
+        preview_button = Button(
+            button_frame, text='Preview Settings', command=preview_on_select)
+        preview_button.pack()
+
+        apply_button = Button(
+            button_frame, text='Apply Settings', command=apply_on_select)
+        apply_button.pack()
 
 
 #################
@@ -389,7 +503,7 @@ EDA_Canvas = FigureCanvasTkAgg(fig, master=right)
 top = EDA_Canvas.get_tk_widget()
 right.add(top, stretch='first')
 # Bottom right item, controls
-EDA_Controls = Red_Frame(EDA_Pane)
+EDA_Controls = PP_Frame(EDA_Pane)
 right.add(EDA_Controls)
 
 
