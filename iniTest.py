@@ -29,3 +29,4 @@ config.set('section_b', 'not_found_val', '404')
 # save to a file
 with open('test_update.ini', 'w') as configfile:
     config.write(configfile)
+configfile.close()
