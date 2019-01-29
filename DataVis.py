@@ -1,6 +1,11 @@
 import tkinter as tk
-from tkinter import Frame, Label, Button, PanedWindow, Listbox, Toplevel, Scrollbar
-from tkinter import HORIZONTAL, VERTICAL, LEFT, RIGHT, TOP, BOTTOM, Y, X, BOTH, END
+from tkinter import Frame, Label, Button, PanedWindow, Listbox, Toplevel, Scrollbar, OptionMenu, Checkbutton
+from tkinter import HORIZONTAL, VERTICAL, TOP, BOTTOM, LEFT, RIGHT, CENTER
+from tkinter import END, FIRST, LAST
+from tkinter import Y, X, BOTH
+from tkinter import SINGLE, MULTIPLE, EXTENDED, BROWSE, UNDERLINE, DOTBOX  # listbox
+from tkinter import FLAT, GROOVE, RAISED, RIDGE, SOLID, SUNKEN  # reliefs
+from tkinter import Variable, BooleanVar, StringVar, IntVar
 from tkinter import filedialog, ttk, font
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -32,13 +37,6 @@ note = ttk.Notebook(root)
 
 # create config parser for ini files
 config = ConfigParser()
-
-# instantiate figure object for use in canvas
-fig = Figure()
-
-# create the EDA listbox list
-EDA_list = ["Pairplot", "Correlation Matrix",
-            "Bar Chart", "Scatter Plot", "PCA"]
 
 # create the data cleaning listbox list
 Cleaning_list = ["Find and Replace", "Scaling",
@@ -154,30 +152,37 @@ def EDA_onSelect(evt):
         EDA_Canvas.draw()
 
         if (index == 0):  # pairplot
+            raise_frame(pp_frame)
             # use custom vals for fig creation
             if(config.has_section('pairplot') and config.has_section('general')):
                 # import user data set
                 data_loc = config.get('general', 'dataset_location')
                 data = pd.read_csv(data_loc, encoding='latin-1')
                 data = data.dropna()
+
                 # import user graph settings
                 # which column determines color of points
                 pp_hue = config.get('pairplot', 'hue')
                 if pp_hue == 'None':
                     pp_hue = None
-                print('Hue: ', pp_hue)
+                
                 # which columns to use in plot
                 pp_vars = config.get('pairplot', 'vars').split(',')
                 if pp_vars == ['None'] or pp_vars == ['']:
                     pp_vars = None
-                print('Vars: ', pp_vars)
+
                 # fit regression line?
                 pp_kind = config.get('pairplot', 'kind')
-                print('Kind: ', pp_kind)
+
                 # which graphs to use along diagonal
                 pp_diag_kind = config.get('pairplot', 'diag_kind')
-                print('Diag_Kind: ', pp_diag_kind)
+
                 # create and display custom graph
+                print('PP ON LISTBOX:')
+                print('Hue: ', pp_hue)
+                print('Vars: ', pp_vars)
+                print('Kind: ', pp_kind)
+                print('Diag_Kind: ', pp_diag_kind)
                 pp = sns.pairplot(data=data, hue=pp_hue, vars=pp_vars,
                                   kind=pp_kind, diag_kind=pp_diag_kind)
                 pp.savefig('pp.png')
@@ -199,6 +204,7 @@ def EDA_onSelect(evt):
                 a.axis('off')
                 EDA_Canvas.draw()
         elif (index == 1):  # correlation matrix
+            raise_frame(cm_frame)
             # use custom vals for fig creation
             if(config.has_section('correlation') and config.has_section('general')):
                 # import user data set
@@ -206,6 +212,7 @@ def EDA_onSelect(evt):
                 data = pd.read_csv(data_loc, encoding='latin-1')
                 data = data.dropna()
                 data = data.corr()
+
                 # import user graph settings
                 cm_annot = config.getboolean(
                     'correlation', 'annot')  # print numbers in cells?
@@ -213,9 +220,14 @@ def EDA_onSelect(evt):
                     'correlation', 'cbar')  # show colobar?
                 cm_square = config.getboolean(
                     'correlation', 'square')  # make cells square?
+                
+                # create and display custom graph
+                print('CM ON LISTBOX:')
+                print('Annot: ', cm_annot)
+                print('Cbar: ', cm_cbar)
+                print('Square: ', cm_square)
                 fig.clear()
                 a = fig.add_subplot(111)
-                # create and display custom graph
                 sns.heatmap(data=data, annot=cm_annot,
                             cbar=cm_cbar, square=cm_square, ax=a)
                 EDA_Canvas.draw()
@@ -228,24 +240,30 @@ def EDA_onSelect(evt):
                 sns.heatmap(data=data, ax=a)
                 EDA_Canvas.draw()
         elif (index == 2):  # bar chart
+            raise_frame(bp_frame)
             # use custom vals for fig creation
             if(config.has_section('bar') and config.has_section('general')):
                 # import user data set
                 data_loc = config.get('general', 'dataset_location')
                 data = pd.read_csv(data_loc, encoding='latin-1')
                 data = data.dropna()
+                
                 # import user graph settings
                 bp_x = config.get('bar', 'x')  # x var
                 bp_y = config.get('bar', 'y')  # y var
                 bp_hue = config.get('bar', 'hue')  # hue column
                 bp_ci = config.get('bar', 'ci')  # confidence intervals
-                # vertical or horizontal
-                bp_orient = config.get('bar', 'orient')
+
+                # create and display custom graph
+                print('BP ON LISTBOX:')
+                print('X: ', bp_x)
+                print('Y: ', bp_y)
+                print('Hue: ', bp_hue)
+                print('Ci: ', bp_ci)
                 fig.clear()
                 a = fig.add_subplot(111)
-                # create and display custom graph
                 sns.barplot(data=data, x=bp_x, y=bp_y, hue=bp_hue,
-                            ci=bp_ci, orient=bp_orient, ax=a)
+                            ci=bp_ci, ax=a)
                 EDA_Canvas.draw()
             else:  # go with default fig creation
                 data = sns.load_dataset("flights")
@@ -261,6 +279,7 @@ def EDA_onSelect(evt):
                 # import user data set
                 data = config.get('general', 'dataset_location')
                 data = data.dropna()
+                
                 # import user graph settings
                 sp_x = config.get('scatter', 'x')  # x var
                 sp_y = config.get('scatter', 'y')  # y var
@@ -271,7 +290,15 @@ def EDA_onSelect(evt):
                     'scatter', 'scatter')  # draw scatter?
                 # fit linear regression line?
                 sp_fit_reg = config.get('scatter', 'fit_reg')
+                
                 # create and display custom graph
+                print('SP ON LISTBOX:')
+                print('X: ', sp_x)
+                print('Y: ', sp_y)
+                print('Hue: ', sp_hue)
+                print('Legend: ', sp_legend)
+                print('Scatter: ', sp_scatter)
+                print('Fit Reg: ', sp_fit_reg)
                 sp = sns.lmplot(data=data, x=sp_x, y=sp_y, hue=sp_hue,
                                 legend=sp_legend, scatter=sp_scatter, fit_reg=sp_fit_reg)
                 sp.savefig('sp.png')
@@ -328,37 +355,13 @@ class Red_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
         self["bg"] = "red"
 
 
-class Blue_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
-    def __init__(self, the_window):
-        super().__init__()
-        self["height"] = 150
-        self["width"] = 150
-        self["bg"] = "blue"
-
-
-class Green_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
-    def __init__(self, the_window):
-        super().__init__()
-        self["height"] = 150
-        self["width"] = 150
-        self["bg"] = "green"
-
-
-class Yellow_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
-    def __init__(self, the_window):
-        super().__init__()
-        self["height"] = 150
-        self["width"] = 150
-        self["bg"] = "yellow"
-
-
 def raise_frame(frame):
     frame.tkraise()
 
 
 class PP_Frame(Frame):
-    def __init__(self, parent):
-        super().__init__()
+    def __init__(self, parent, **options):
+        Frame.__init__(self, parent, **options)
 
         config.read('datavis.ini')
         data_loc = config.get('general', 'dataset_location')
@@ -401,15 +404,23 @@ class PP_Frame(Frame):
                 pp_diag_kind = Variable(
                     value=config.get('pairplot', 'diag_kind'))
 
-        pad_size = 20
+        pad_size = 50
+        listbox_height = 4
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(6, weight=1)
 
+        # vars control
         vars_frame = Frame(self)
-        vars_frame.grid(row=0, column=0, padx=pad_size)
+        vars_frame.grid(row=0, column=1, padx=pad_size)
+
         vars_label = Label(vars_frame, text='Columns to use in plot:')
         vars_label.pack()
+
         vars_listbox = Listbox(vars_frame, selectmode=MULTIPLE, justify=CENTER)
+
         for column in numeric_columns_list:
             vars_listbox.insert(END, column)
+
         if not pp_vars == None:
             for var in pp_vars:
                 i = vars_listbox.get(0, END).index(var)
@@ -418,18 +429,28 @@ class PP_Frame(Frame):
         # vars_listbox.select_set(0, END)  # all columns selected by default
         # update this select_set to go off of which vars from the column list are on
         # based on whats in the ini (pp_vars) instead of just selecting all
-        vars_listbox.pack()
-        vars_listbox.config(height=0)
+        vars_listbox.config(height=listbox_height)
+        vars_listbox.pack(side=LEFT)
 
+        vars_scrollbar = Scrollbar(vars_frame)
+        vars_listbox.config(yscrollcommand=vars_scrollbar.set)
+        vars_scrollbar.config(command=vars_listbox.yview)
+        vars_scrollbar.pack(side=RIGHT, fill=Y)
+
+        # hue control
         hue_frame = Frame(self)
-        hue_frame.grid(row=0, column=1, padx=pad_size)
+        hue_frame.grid(row=0, column=2, padx=pad_size)
+
         hue_label = Label(hue_frame, text='Column that determines hue:')
         hue_label.pack()
-        hue_option = Tk.OptionMenu(hue_frame, pp_hue, 'None', *columns_list)
+
+        hue_option = OptionMenu(hue_frame, pp_hue, 'None', *columns_list)
         hue_option.pack()
 
+        # kind control
         kind_frame = Frame(self)
-        kind_frame.grid(row=0, column=2, padx=pad_size)
+        kind_frame.grid(row=0, column=3, padx=pad_size)
+
         kind_label = Label(kind_frame, text='Fit regression line:')
         kind_label.pack()
 
@@ -440,33 +461,34 @@ class PP_Frame(Frame):
         kind_checkbox.pack()
         update_text()
 
+        # diag kind control
         diag_kind_frame = Frame(self)
-        diag_kind_frame.grid(row=0, column=3, padx=pad_size)
+        diag_kind_frame.grid(row=0, column=4, padx=pad_size)
+
         diag_kind_label = Label(
             diag_kind_frame, text='Graph type along diagonal:')
         diag_kind_label.pack()
-        diag_kind_option = Tk.OptionMenu(
+
+        diag_kind_option = OptionMenu(
             diag_kind_frame, pp_diag_kind, *diag_kind_list)
         diag_kind_option.pack()
-
-        # add preview button as well as apply button
-        # since updating the graph as the user makes changes would be too slow
-        # but they may want to preview their changes rather than just applying off the bat
 
         def preview_on_select():
             preview_hue = pp_hue.get()
             if preview_hue == 'None':
                 preview_hue = None
-            # print(preview_hue)
             items = vars_listbox.curselection()
             preview_vars = [numeric_columns_list[int(item)] for item in items]
             if preview_vars == []:
                 preview_vars = None
-            # print(preview_vars)
             preview_kind = pp_kind.get()
-            # print(preview_kind)
             preview_diag_kind = pp_diag_kind.get()
-            # print(preview_diag_kind)
+
+            print('PP ON PREVIEW:')
+            print('Hue: ', preview_hue)
+            print('Vars: ', preview_vars)
+            print('kind: ', preview_kind)
+            print('Diag Kind: ', preview_diag_kind)
             pp = sns.pairplot(data=data, hue=preview_hue, vars=preview_vars,
                               kind=preview_kind, diag_kind=preview_diag_kind)
             pp.savefig('pp.png')
@@ -489,7 +511,6 @@ class PP_Frame(Frame):
             config.set('pairplot', 'hue', apply_hue)
             if apply_hue == 'None':
                 apply_hue = None
-            # print(apply_hue)
 
             items = vars_listbox.curselection()
             apply_vars = [numeric_columns_list[int(item)] for item in items]
@@ -497,20 +518,22 @@ class PP_Frame(Frame):
             # ','.join(map(str, myList)) this does the same thing but for lists of ints
             if apply_vars == []:
                 apply_vars = None
-            # print(apply_vars)
 
             apply_kind = pp_kind.get()
             config.set('pairplot', 'kind', apply_kind)
-            # print(apply_kind)
 
             apply_diag_kind = pp_diag_kind.get()
             config.set('pairplot', 'diag_kind', apply_diag_kind)
-            # print(apply_diag_kind)
 
             with open('datavis.ini', 'w') as configfile:
                 config.write(configfile)
             configfile.close()
 
+            print('PP ON APPLY:')
+            print('Hue: ', apply_hue)
+            print('Vars: ', apply_vars)
+            print('Kind: ', apply_kind)
+            print('Diag Kind: ', apply_diag_kind)
             pp = sns.pairplot(data=data, hue=apply_hue, vars=apply_vars,
                               kind=apply_kind, diag_kind=apply_diag_kind)
             pp.savefig('pp.png')
@@ -522,7 +545,7 @@ class PP_Frame(Frame):
             EDA_Canvas.draw()
 
         button_frame = Frame(self)
-        button_frame.grid(row=0, column=4, padx=pad_size)
+        button_frame.grid(row=0, column=5, padx=pad_size)
 
         preview_button = Button(
             button_frame, text='Preview Settings', command=preview_on_select)
@@ -534,8 +557,8 @@ class PP_Frame(Frame):
 
 
 class CM_Frame(Frame):
-    def __init__(self, parent):
-        super().__init__()
+    def __init__(self, parent, **options):
+        Frame.__init__(self, parent, **options)
 
         config.read('datavis.ini')
         data_loc = config.get('general', 'dataset_location')
@@ -543,56 +566,63 @@ class CM_Frame(Frame):
 
         # set correlation matrix settings to defaults
         # print numbers in cells?
-        cm_annot = False
+        cm_annot = Variable(value='False')
         # show color bar?
-        cm_cbar = True
+        cm_cbar = Variable(value='True')
         # make cells square?
-        cm_square = False
+        cm_square = Variable(value='False')
 
         # set cm settings to previous user settings if applicable
         if config.has_section('correlation'):
             if config.has_option('correlation', 'annot'):
-                cm_annot = config.getboolean('correlation', 'annot')
+                cm_annot = Variable(value=config.get('correlation', 'annot'))
             if config.has_option('correlation', 'cbar'):
-                cm_cbar = config.getboolean('correlation', 'cbar')
+                cm_cbar = Variable(value=config.get('correlation', 'cbar'))
             if config.has_option('correlation', 'kind'):
-                cm_square = config.getboolean('correlation', 'kind')
+                cm_square = Variable(value=config.get('correlation', 'kind'))
 
-        pad_size = 20
+        pad_size = 50
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(5, weight=1)
 
+        # annot control
         annot_frame = Frame(self)
-        annot_frame.grid(row=0, column=0, padx=pad_size)
+        annot_frame.grid(row=0, column=1, padx=pad_size)
+
         annot_label = Label(annot_frame, text='Show numbers in cells:')
         annot_label.pack()
 
         def update_annot_check():
-            annot_checkbox.config(text=str(cm_annot))
-        annot_checkbox = Checkbutton(
-            annot_frame, variable=cm_annot, command=update_annot_check, relief=RAISED)
+            annot_checkbox.config(text=str(cm_annot.get()))
+        annot_checkbox = Checkbutton(annot_frame, variable=cm_annot, onvalue='True',
+                                     offvalue='False', command=update_annot_check, relief=RAISED)
         annot_checkbox.pack()
         update_annot_check()
 
+        # cbar control
         cbar_frame = Frame(self)
-        cbar_frame.grid(row=0, column=1, padx=pad_size)
+        cbar_frame.grid(row=0, column=2, padx=pad_size)
+
         cbar_label = Label(cbar_frame, text='Show color bar:')
         cbar_label.pack()
 
         def update_cbar_check():
-            cbar_checkbox.config(text=str(cm_cbar))
-        cbar_checkbox = Checkbutton(
-            cbar_frame, variable=cm_cbar, command=update_cbar_check, relief=RAISED)
+            cbar_checkbox.config(text=str(cm_cbar.get()))
+        cbar_checkbox = Checkbutton(cbar_frame, variable=cm_cbar, onvalue='True', offvalue='False', command=update_cbar_check, relief=RAISED)
         cbar_checkbox.pack()
         update_cbar_check()
 
+        # square control
         square_frame = Frame(self)
-        square_frame.grid(row=0, column=2, padx=pad_size)
+        square_frame.grid(row=0, column=3, padx=pad_size)
+
         square_label = Label(square_frame, text='Make cells square:')
         square_label.pack()
 
         def update_square_check():
-            square_checkbox.config(text=str(cm_square))
+            square_checkbox.config(text=str(cm_square.get()))
         square_checkbox = Checkbutton(
-            square_frame, variable=cm_square, command=update_square_check, relief=RAISED)
+            square_frame, variable=cm_square, onvalue='True', offvalue='False', command=update_square_check, relief=RAISED)
         square_checkbox.pack()
         update_square_check()
 
@@ -601,6 +631,10 @@ class CM_Frame(Frame):
             preview_cbar = cm_cbar
             preview_square = cm_square
 
+            print('CM ON PREVIEW:')
+            print('Annot: ', preview_annot)
+            print('Cbar: ', preview_cbar)
+            print('Square: ', preview_square)
             fig.clear()
             a = fig.add_subplot(111)
             sns.heatmap(data=data, annot=preview_annot,
@@ -624,6 +658,10 @@ class CM_Frame(Frame):
                 config.write(configfile)
             configfile.close()
 
+            print('CM ON APPLY:')
+            print('Annot: ', apply_annot)
+            print('Cbar: ', apply_cbar)
+            print('Sqaure: ', apply_square)
             fig.clear()
             a = fig.add_subplot(111)
             sns.heatmap(data=data, annot=apply_annot,
@@ -631,7 +669,7 @@ class CM_Frame(Frame):
             EDA_Canvas.draw()
 
         button_frame = Frame(self)
-        button_frame.grid(row=0, column=3, padx=pad_size)
+        button_frame.grid(row=0, column=4, padx=pad_size)
 
         preview_button = Button(
             button_frame, text='Preview Settings', command=preview_on_select)
@@ -643,8 +681,8 @@ class CM_Frame(Frame):
 
 
 class BP_Frame(Frame):
-    def __init__(self, parent):
-        super().__init__()
+    def __init__(self, parent, **options):
+        Frame.__init__(self, parent, **options)
 
         config.read('datavis.ini')
         data_loc = config.get('general', 'dataset_location')
@@ -674,72 +712,132 @@ class BP_Frame(Frame):
         # set bp settings to previous user settings if applicable
         if config.has_section('bar'):
             if config.has_option('bar', 'x'):
-                bp_x = config.get('bar', 'x')
-                if bp_x == 'None':
+                bp_x = config.get('bar', 'x').split(',')
+                if bp_x == 'None' or bp_x == ['']:
                     bp_x = None
             if config.has_option('bar', 'y'):
-                bp_y = config.get('bar', 'y')
-                if bp_y == 'None':
+                bp_y = config.get('bar', 'y').split(',')
+                if bp_y == 'None' or bp_y == ['']:
                     bp_y = None
             if config.has_option('bar', 'hue'):
-                bp_hue = config.get('bar', 'hue')
-                if bp_hue == 'None':
+                bp_hue = config.get('bar', 'hue').split(',')
+                if bp_hue == 'None' or bp_hue == ['']:
                     bp_hue = None
             if config.has_option('bar', 'ci'):
                 bp_ci = config.get('bar', 'ci')
                 if bp_ci == 'None':
                     bp_ci = None
 
-        pad_size = 20
+        pad_size = 50
+        listbox_height = 4
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(6, weight=1)
 
+        # x control
         x_frame = Frame(self)
-        x_frame.grid(row=0, column=0, padx=pad_size)
+        x_frame.grid(row=0, column=1, padx=pad_size)
+
         x_label = Label(x_frame, text='Column to use for x:')
         x_label.pack()
+
         x_listbox = Listbox(x_frame, selectmode=SINGLE, justify=CENTER)
         for column in columns_list:
             x_listbox.insert(END, column)
-        x_listbox.pack()
-        x_listbox.config(height=0)
+        x_listbox.config(height=listbox_height)
+        x_listbox.pack(side=LEFT)
 
+        x_scrollbar = Scrollbar(x_frame)
+        x_listbox.config(yscrollcommand=x_scrollbar.set)
+        x_scrollbar.config(command=x_listbox.yview)
+        x_scrollbar.pack(side=RIGHT, fill=Y)
+
+        # y control
         y_frame = Frame(self)
-        y_frame.grid(row=0, column=1, padx=pad_size)
+        y_frame.grid(row=0, column=2, padx=pad_size)
+
         y_label = Label(y_frame, text='Column to use for y:')
         y_label.pack()
+
         y_listbox = Listbox(y_frame, selectmode=SINGLE, justify=CENTER)
         for column in numeric_columns_list:
             y_listbox.insert(END, column)
-        y_listbox.pack()
-        y_listbox.config(height=0)
+        y_listbox.config(height=listbox_height)
+        y_listbox.pack(side=LEFT)
 
+        y_scrollbar = Scrollbar(y_frame)
+        y_listbox.config(yscrollcommand=y_scrollbar.set)
+        y_scrollbar.config(command=y_listbox.yview)
+        y_scrollbar.pack(side=RIGHT, fill=Y)
+
+        # hue control
         hue_frame = Frame(self)
-        hue_frame.grid(row=0, column=2, padx=pad_size)
+        hue_frame.grid(row=0, column=3, padx=pad_size)
+
         hue_label = Label(hue_frame, text='Column to use for hue:')
         hue_label.pack()
+
         hue_listbox = Listbox(hue_frame, selectmode=SINGLE, justify=CENTER)
         for column in columns_list:
             hue_listbox.insert(END, column)
-        hue_listbox.pack()
-        hue_listbox.config(height=0)
+        hue_listbox.config(height=listbox_height)
+        hue_listbox.pack(side=LEFT)
 
+        hue_scrollbar = Scrollbar(hue_frame)
+        hue_listbox.config(yscrollcommand=hue_scrollbar.set)
+        hue_scrollbar.config(command=hue_listbox.yview)
+        hue_scrollbar.pack(side=RIGHT, fill=Y)
+
+        # confidence interval control
         ci_frame = Frame(self)
-        ci_frame.grid(row=0, column=3, padx=pad_size)
+        ci_frame.grid(row=0, column=4, padx=pad_size)
+
         ci_label = Label(ci_frame, text='Confidence interval:')
         ci_label.pack()
 
         def update_text():
-            ci_checkbox.config(text=str(bp_ci.get()))
+            text = str(bp_ci.get())
+            if text == 'sd':
+                text = 'Standard Dev.'
+            ci_checkbox.config(text=text)
         ci_checkbox = Checkbutton(ci_frame, variable=bp_ci, onvalue='sd',
                                   offvalue='None', command=update_text, relief=RAISED)
         ci_checkbox.pack()
         update_text()
 
         def preview_on_select():
-            preview_x = bp_x
-            preview_y = bp_y
-            preview_hue = bp_hue
-            preview_ci = bp_ci
+            #preview_x = bp_x
+            #if preview_x == 'None':
+            #    preview_x = None
+            x_items = x_listbox.curselection()
+            preview_x = [columns_list[int(x_item)] for x_item in x_items]
+            if preview_x == []:
+                preview_x = None
+            
+            #preview_y = bp_y
+            #if preview_y == 'None':
+            #    preview_y = None
+            y_items = y_listbox.curselection()
+            preview_y = [numeric_columns_list[int(y_item)] for y_item in y_items]
+            if preview_y == []:
+                preview_y = None
 
+            #preview_hue = bp_hue
+            #if preview_hue == 'None':
+            #    preview_hue = None
+            hue_items = hue_listbox.curselection()
+            preview_hue = [numeric_columns_list[int(hue_item)] for hue_item in hue_items]
+            if preview_hue == []:
+                preview_hue = None
+            
+            preview_ci = bp_ci.get()
+            if preview_ci == 'None':
+                preview_ci = None
+
+            print('BP ON PREVIEW:')
+            print('X: ', preview_x)
+            print('Y: ', preview_y)
+            print('Hue: ', preview_hue)
+            print('Ci: ', preview_ci)
             fig.clear()
             a = fig.add_subplot(111)
             sns.barplot(data=data, x=preview_x, y=preview_y,
@@ -750,22 +848,50 @@ class BP_Frame(Frame):
             if not config.has_section('bar'):
                 config.add_section('bar')
 
-            apply_x = bp_x
-            config.set('bar', 'x', apply_x)
+            #apply_x = bp_x
+            #if apply_x == 'None':
+            #    apply_x = None
+            #config.set('bar', 'x', apply_x)
+            x_items = x_listbox.curselection()
+            apply_x = [columns_list[int(x_item)] for x_item in x_items]
+            config.set('bar', 'x', ','.join(apply_x))
+            if apply_x == []:
+                apply_x = None
 
-            apply_y = bp_y
-            config.set('bar', 'y', apply_y)
+            #apply_y = bp_y
+            #if apply_y == 'None':
+            #    apply_y = None
+            #config.set('bar', 'y', apply_y)
+            y_items = y_listbox.curselection()
+            apply_y = [numeric_columns_list[int(y_item)] for y_item in y_items]
+            config.set('bar', 'y', ','.join(apply_y))
+            if apply_y == []:
+                apply_y = None
 
-            apply_hue = bp_hue
-            config.set('bar', 'hue', apply_hue)
+            #apply_hue = bp_hue
+            #if apply_hue == 'None':
+            #    apply_hue = None
+            #config.set('bar', 'hue', apply_hue)
+            hue_items = hue_listbox.curselection()
+            apply_hue = [numeric_columns_list[int(hue_item)] for hue_item in hue_items]
+            config.set('bar', 'hue', ','.join(apply_hue))
+            if apply_hue == []:
+                apply_hue = None
 
             apply_ci = bp_ci.get()
+            if apply_ci == 'None':
+                apply_ci = None
             config.set('bar', 'ci', apply_ci)
 
             with open('datavis.ini', 'w') as configfile:
                 config.write(configfile)
             configfile.close()
 
+            print('BP ON APPLY:')
+            print('X: ', apply_x)
+            print('Y: ', apply_y)
+            print('Hue: ', apply_hue)
+            print('Ci: ', apply_ci)
             fig.clear()
             a = fig.add_subplot(111)
             sns.barplot(data=data, x=apply_x, y=apply_y,
@@ -773,7 +899,7 @@ class BP_Frame(Frame):
             EDA_Canvas.draw()
 
         button_frame = Frame(self)
-        button_frame.grid(row=0, column=4, padx=pad_size)
+        button_frame.grid(row=0, column=5, padx=pad_size)
 
         preview_button = Button(
             button_frame, text='Preview Settings', command=preview_on_select)
@@ -830,46 +956,96 @@ right.add(Data_Cleaning_Controls)
 #################################################
 # Create tab for exploratory data analysis (EDA)
 ###############################################
+EDA_Bottom_Pane = PanedWindow(
+    root, orient=VERTICAL, bd=0, bg='yellow', sashwidth=4)
+EDA_Bottom_Pane.grid(sticky='nsew')
+
+EDA_Top_Pane = PanedWindow(
+    EDA_Bottom_Pane, orient=HORIZONTAL, bd=0, bg='black', sashwidth=4)
+EDA_Top_Pane.grid(sticky='nsew')
+EDA_Bottom_Pane.add(EDA_Top_Pane, stretch='always')
+
+EDA_Controls_Frame = Frame(EDA_Bottom_Pane)
+EDA_Controls_Frame.config(bg='red', width=200, height=100)
+EDA_Controls_Frame.grid(sticky='nsew')
+EDA_Controls_Frame.grid_columnconfigure(0, weight=1)
+#EDA_Controls_Frame.grid_columnconfigure(2, weight=1)
+EDA_Bottom_Pane.add(EDA_Controls_Frame, stretch='never')
+
+pp_frame = PP_Frame(EDA_Controls_Frame)
+cm_frame = CM_Frame(EDA_Controls_Frame)
+bp_frame = BP_Frame(EDA_Controls_Frame)
+
+for frame in (pp_frame, cm_frame, bp_frame):
+    frame.grid(row=0, column=0, sticky='nsew')
+raise_frame(pp_frame)
+
+EDA_Listbox_Frame = Frame(EDA_Top_Pane)
+EDA_Listbox_Frame.config(bg='blue', width=100, height=200)
+EDA_Listbox_Frame.grid(sticky='nsew')
+EDA_Top_Pane.add(EDA_Listbox_Frame, stretch='never')
+
+EDA_list = ["Pairplot", "Correlation Matrix",
+            "Bar Chart", "Scatter Plot", "PCA"]
+EDA_Listbox = Create_Listbox(EDA_Listbox_Frame, EDA_list)
+EDA_Listbox.bind('<<ListboxSelect>>', EDA_onSelect)
+
+EDA_Canvas_Frame = Frame(EDA_Top_Pane)
+EDA_Canvas_Frame.config(bg='orange')
+EDA_Canvas_Frame.grid(sticky='nsew')
+EDA_Canvas_Frame.grid_rowconfigure(0, weight=1)
+EDA_Canvas_Frame.grid_columnconfigure(0, weight=1)
+EDA_Top_Pane.add(EDA_Canvas_Frame, stretch='always')
+
+fig = Figure()
+EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Canvas_Frame)
+EDA_Canvas.get_tk_widget().grid(sticky='nsew')
+
+"""
 EDA_Pane = PanedWindow(orient=HORIZONTAL)
 #EDA_Pane.pack(fill=BOTH, expand=1)
 EDA_Pane.grid(sticky='nesw')
 #EDA_Pane.grid_columnconfigure(0, weight=1)
 #DA_Pane.grid_rowconfigure(0, weight=1)
+
 # Leftmost item, listbox
 left = Frame(EDA_Pane)
 EDA_Listbox = Create_Listbox(left, EDA_list)
 EDA_Listbox.bind('<<ListboxSelect>>', EDA_onSelect)
 EDA_Pane.add(left)
+
 right = PanedWindow(orient=VERTICAL)
 #right.pack(fill=BOTH, expand=1)
 right.grid(sticky='nesw')
 #right.grid_columnconfigure(0, weight=1)
 #right.grid_rowconfigure(0, weight=1)
 EDA_Pane.add(right)
+
 # Top right item, canvas
 # EDA_Canvas = Red_Frame(EDA_Pane)
 EDA_Canvas = FigureCanvasTkAgg(fig, master=right)
 top = EDA_Canvas.get_tk_widget()
 right.add(top, stretch='first')
+
 # Bottom right item, controls
 EDA_Controls = Frame(EDA_Pane)
 EDA_Controls.grid(sticky='nesw')
 right.add(EDA_Controls)
-"""
-PP_Controls = PP_Frame(EDA_Controls)
-CM_Controls = CM_Frame(EDA_Controls)
-BP_Controls = BP_Frame(EDA_Controls)
 
-for frame in (PP_Controls, CM_Controls, BP_Controls):
-    #frame.grid(row=0, column=0, sticky='news')
-    frame.pack()
+#PP_Controls = PP_Frame(EDA_Controls)
+#CM_Controls = CM_Frame(EDA_Controls)
+#BP_Controls = BP_Frame(EDA_Controls)
+
+#for frame in (PP_Controls, CM_Controls, BP_Controls):
+#    #frame.grid(row=0, column=0, sticky='news')
+#    frame.pack()
 """
 
 ###############################
 # Add the tabs to the notebook
 #############################
 note.add(Data_Cleaning_Pane, text="Data Cleaning")
-note.add(EDA_Pane, text="EDA")
+note.add(EDA_Bottom_Pane, text="EDA")
 
 #note.pack(fill=BOTH, expand=1)
 note.grid(sticky='nesw')
@@ -879,3 +1055,9 @@ root.grid_columnconfigure(0, weight=1)
 root.grid_rowconfigure(1, weight=1)
 
 root.mainloop()
+
+#################################################################################################
+#### TODO: ######################################################################################
+# NEED TO MAKE THE BP LISTBOXES CUR_SELECTION INITIALIZE CORRECTLY ACCORDING TO WHATS IN THE .INI
+# TEST ALL THE CONTROL PANELS, AS MANY OPTIONS AND COMBINATIONS AS POSSIBLE TO CHECK FOR ERRORS
+# 
