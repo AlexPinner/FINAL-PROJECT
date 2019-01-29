@@ -1,20 +1,14 @@
-from tkinter import filedialog
-import matplotlib.image as mpimg
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import tkinter as tk
+from tkinter import Frame, Label, Button, PanedWindow, Listbox, Toplevel, Scrollbar
+from tkinter import HORIZONTAL, VERTICAL, LEFT, RIGHT, TOP, BOTTOM, Y, X, BOTH, END
+from tkinter import filedialog, ttk, font
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
-from tkinter import *
-from tkinter import ttk
-from tkinter import font
-
-import sys
-if sys.version_info[0] < 3:
-    import Tkinter as Tk
-else:
-    import tkinter as Tk
 
 try:
     from configparser import ConfigParser
@@ -22,14 +16,15 @@ except ImportError:
     from ConfigParser import ConfigParser  # ver. < 3.0
 
 # create main window
-root = Tk.Tk()
-root.geometry('2400x1200')
+root = tk.Tk()
+root.title('DataVis')
+root.geometry('{}x{}'.format(2400, 1200))
 
 # print(font.names()) #all available fonts
 myfont = font.nametofont('TkDefaultFont')
 myfont.configure(size=24)
-data = sns.load_dataset('Iris')
 # Pre-brake fonts and window size so it doesn't happen later
+data = sns.load_dataset('Iris')
 sns.pairplot(data=data)
 
 # create notebook (thing that controls the tabs)
@@ -331,24 +326,31 @@ class Red_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
         self["height"] = 150
         self["width"] = 150
         self["bg"] = "red"
+
+
 class Blue_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
     def __init__(self, the_window):
         super().__init__()
         self["height"] = 150
         self["width"] = 150
         self["bg"] = "blue"
+
+
 class Green_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
     def __init__(self, the_window):
         super().__init__()
         self["height"] = 150
         self["width"] = 150
         self["bg"] = "green"
+
+
 class Yellow_Frame(Frame):  # PLACEHOLDER FRAME, DELETE LATER
     def __init__(self, the_window):
         super().__init__()
         self["height"] = 150
         self["width"] = 150
         self["bg"] = "yellow"
+
 
 def raise_frame(frame):
     frame.tkraise()
@@ -790,9 +792,9 @@ toolbar = Frame(master=root, bd=1, relief='raised')
 toolbar.grid(sticky='new')
 #toolbar.grid_columnconfigure(0, weight=1)
 #toolbar.grid_rowconfigure(0, weight=1)
-photo = PhotoImage(file="open_file.png")
+photo = tk.PhotoImage(file="open_file.png")
 import_btn = Button(toolbar, image=photo, command=lambda: Select_Dataset())
-#import_btn.pack(side='left')
+# import_btn.pack(side='left')
 import_btn.grid(sticky='w')
 #import_btn.grid_columnconfigure(0, weight=1)
 #import_btn.grid_rowconfigure(0, weight=1)
@@ -853,12 +855,6 @@ right.add(top, stretch='first')
 EDA_Controls = Frame(EDA_Pane)
 EDA_Controls.grid(sticky='nesw')
 right.add(EDA_Controls)
-blue = Blue_Frame(EDA_Controls)
-green = Green_Frame(EDA_Controls)
-yellow = Yellow_Frame(EDA_Controls)
-for frame in (blue, green, yellow):
-    frame.grid( row=0, column=0, sticky='nesw')
-    #right.add(frame)
 """
 PP_Controls = PP_Frame(EDA_Controls)
 CM_Controls = CM_Frame(EDA_Controls)
