@@ -1,6 +1,7 @@
 import tkinter as tk
 from configparser import ConfigParser
 import pandas as pd
+import seaborn as sns
 
 class DV_Table(tk.Frame):
     def __init__(self, root):
@@ -30,8 +31,11 @@ class DV_Table(tk.Frame):
 
         config = ConfigParser()
         config.read('datavis.ini')
-        data_loc = config.get('general', 'dataset_location')
-        data = pd.read_csv(data_loc, encoding='latin-1')
+        if config.has_section('general'):
+            data_loc = config.get('general', 'dataset_location')
+            data = pd.read_csv(data_loc, encoding='latin-1')
+        else:
+            data = sns.load_dataset('iris')
         self.create_table(data)
 
         self.canvas.create_window((0, 0), window=self.inner_frame)

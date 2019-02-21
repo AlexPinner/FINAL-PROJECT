@@ -24,6 +24,8 @@ class DV_Toolbar(tk.Frame):
         self.curr = self.config.get('general', 'dataset_location')
         print('tests')
         if self.filename and (self.curr != self.filename):  # new dataset?
+            if not self.config.has_option('settings_reset_warning'):
+                config.set('general', 'settings_reset_warning', 'True')
             if self.config.getboolean('general', 'settings_reset_warning'):  # ask again?
                 print('ask?')
                 if self.Settings_Reset_Warning(root):  # continue?

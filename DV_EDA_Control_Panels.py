@@ -13,8 +13,12 @@ class PP_Frame(tk.Frame):
         # Get ini options
         self.config = config = ConfigParser()
         config.read('datavis.ini')
-        data_loc = config.get('general', 'dataset_location')
-        self.data = pd.read_csv(data_loc, encoding='latin-1')
+        if config.has_section('general'):
+            data_loc = config.get('general', 'dataset_location')
+            self.data = pd.read_csv(data_loc, encoding='latin-1')
+        else:
+            self.data = sns.load_dataset('iris')
+        self.data = self.data.dropna()
 
         # Lists for listboxes and option menus
         columns = self.data.columns
@@ -208,8 +212,11 @@ class CM_Frame(tk.Frame):
         # Get ini options
         self.config  = config = ConfigParser()
         config.read('datavis.ini')
-        data_loc = config.get('general', 'dataset_location')
-        self.data = pd.read_csv(data_loc, encoding='latin-1')
+        if config.has_section('general'):
+            data_loc = config.get('general', 'dataset_location')
+            self.data = pd.read_csv(data_loc, encoding='latin-1')
+        else:
+            self.data = sns.load_dataset('titanic')
         self.data = self.data.dropna()
         self.data = self.data.corr()
 
@@ -339,8 +346,12 @@ class BP_Frame(tk.Frame):
         # Get ini options
         self.config = config = ConfigParser()
         config.read('datavis.ini')
-        self.data_loc = config.get('general', 'dataset_location')
-        self.data = pd.read_csv(self.data_loc, encoding='latin-1')
+        if config.has_section('general'):
+            self.data_loc = config.get('general', 'dataset_location')
+            self.data = pd.read_csv(self.data_loc, encoding='latin-1')
+        else:
+            self.data = sns.load_dataset('flights')
+        self.data = self.data.dropna()
 
         # Lists for listboxes and option menus
         numeric_columns = self.data.select_dtypes(exclude=['object'])

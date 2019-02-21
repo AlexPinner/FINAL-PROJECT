@@ -1,5 +1,7 @@
+import os.path
 import time
 import tkinter as tk
+from configparser import ConfigParser
 from tkinter import font, ttk
 
 import matplotlib.image as mpimg
@@ -7,7 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+                                               NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
 import DV_DC_Control_Panels
@@ -33,6 +36,20 @@ class DataVis():
         #self.data = data = sns.load_dataset('Iris')
         #sns.pairplot(data=data)                                     # ALSO REMOVE THIS SINCE IT'S NOT NEEDED ON NON MAC MONITORS
 
+        # if config file doesn't exist, create it
+        if os.path.isfile('datavis.ini'):
+            file = open('datavis.ini', 'w')
+            file.close()
+            config = ConfigParser()
+            config.read('datavis.ini')
+            if os.path.isfile('auto-mpg.csv'):
+                if not config.has_section('general'):
+                    config.add_section('general')
+                config.set('general', 'dataset_location', 'auto-mpg.csv')
+                with open('datavis.ini', 'w') as configfile:
+                    config.write(configfile)
+                configfile.close()
+                
         # create notebook (thing that controls the tabs)
         self.note = note = ttk.Notebook(root)
 
