@@ -5,197 +5,194 @@ import matplotlib.image as mpimg
 import pandas as pd
 import seaborn as sns
 
-
 class PP_Frame(tk.Frame):
     def __init__(self, root, figure, EDA_Canvas, **options):
         
         tk.Frame.__init__(self, root, **options)
 
-        self.config = ConfigParser()
-        self.config.read('datavis.ini')
-        self.data_loc = self.config.get('general', 'dataset_location')
-        self.data = pd.read_csv(self.data_loc, encoding='latin-1')
+        # Get ini options
+        self.config = config = ConfigParser()
+        config.read('datavis.ini')
+        data_loc = config.get('general', 'dataset_location')
+        self.data = pd.read_csv(data_loc, encoding='latin-1')
 
-        # need column list for the optionMenu for pp hue and vars
-        self.columns = self.data.columns
-        self.numeric_columns = self.data.select_dtypes(exclude=['object'])
+        # Lists for listboxes and option menus
+        columns = self.data.columns
+        numeric_columns = self.data.select_dtypes(exclude=['object'])
         self.columns_list = list()
         self.numeric_columns_list = list()
-
-        for column in self.columns:
-            self.columns_list.append(column)
-
-        for num_column in self.numeric_columns:
-            self.numeric_columns_list.append(num_column)
-
-        # set pairplot settings to defaults
-        # which column determines color of points
-        self.pp_hue = tk.Variable(value='None')
-        # which columns to use in plot
-        self.pp_vars = None
-        # fit regression line?
-        self.pp_kind = tk.Variable(value='scatter')
-        # which graphs to use along diagonal
-        self.pp_diag_kind = tk.Variable(value='hist')
+        self.columns_list.append('None') # so hue coloring can be set to off
+        for col in columns:
+            self.columns_list.append(col)
+        for num_col in numeric_columns:
+            self.numeric_columns_list.append(num_col)
         self.diag_kind_list = list(['auto', 'hist', 'kde'])
 
-        # set pp settings to previous user settings if applicable
-        if self.config.has_section('pairplot'):
-            if self.config.has_option('pairplot', 'hue'):
-                self.pp_hue = tk.Variable(value=self.config.get('pairplot', 'hue'))
-            if self.config.has_option('pairplot', 'vars'):
-                self.pp_vars = self.config.get('pairplot', 'vars').split(',')
-                if self.pp_vars == 'None' or self.pp_vars == ['']:
-                    self.pp_vars = None
-            if self.config.has_option('pairplot', 'kind'):
-                self.pp_kind = tk.Variable(value=self.config.get('pairplot', 'kind'))
-            if self.config.has_option('pairplot', 'diag_kind'):
-                self.pp_diag_kind = tk.Variable(
-                    value=self.config.get('pairplot', 'diag_kind'))
+        # Default graph options
+        self.pp_hue = tk.Variable(value='None') # which column determines color of points
+        self.pp_vars = tuple() # which columns to use in plot
+        self.pp_kind = tk.Variable(value='scatter') # fit regression line?
+        self.pp_diag_kind = tk.Variable(value='auto') # graph type to use along diagonal
 
-        self.pad_size = 50
-        self.listbox_height = 4
+        # Load graph options from ini, if they don't exist create them and set to default values
+        try:
+            self.pp_hue = tk.Variable(value=config.get('pairplot', 'hue'))
+            self.pp_vars = tuple(config.get('pairplot', 'vars').split(','))
+            if not all(self.pp_vars):
+                self.pp_vars = tuple()
+            self.pp_kind = tk.Variable(value=config.get('pairplot', 'kind'))
+            self.pp_diag_kind = tk.Variable(value=config.get('pairplot', 'diag_kind'))
+        except:
+            if not config.has_section('pairplot'):
+                config.add_section('pairplot')
+                config.set('pairplot', 'hue', self.pp_hue.get())
+                config.set('pairplot', 'vars', ','.join(self.pp_vars))
+                config.set('pairplot', 'kind', self.pp_kind.get())
+                config.set('pairplot', 'diag_kind', self.pp_diag_kind.get())
+                with open('datavis.ini', 'w') as configfile:
+                    config.write(configfile)
+                configfile.close()
+        
+        # General frame settings
+        pad_size = 50
+        listbox_height = 4
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(6, weight=1)
 
-        # vars control
-        self.vars_frame = tk.Frame(self)
-        self.vars_frame.grid(row=0, column=1, padx=self.pad_size)
+        # PP HUE CONTROL FRAME
+        hue_frame = tk.Frame(self)
+        hue_frame.grid(row=0, column=2, padx=pad_size)
 
-        self.vars_label = tk.Label(self.vars_frame, text='Columns to use in plot:')
-        self.vars_label.pack()
+        hue_label = tk.Label(hue_frame, text='Column that determines hue:')
+        hue_label.pack()
 
-        self.vars_listbox = tk.Listbox(self.vars_frame, selectmode=tk.MULTIPLE, justify=tk.CENTER)
+        hue_option = tk.OptionMenu(hue_frame, self.pp_hue, *self.columns_list)
+        hue_option.pack()
 
+        # PP VARS CONTROL FRAME
+        vars_frame = tk.Frame(self)
+        vars_frame.grid(row=0, column=1, padx=pad_size)
+        vars_label = tk.Label(vars_frame, text='Columns to use in plot:')
+        vars_label.pack()
+
+        def vars_update(self, event):
+            lbTup = event.widget.curselection()
+            tmp = list()
+            for tup in lbTup:
+                tmp.append(self.numeric_columns_list[tup])
+            self.pp_vars = tuple(tmp)
+                
+        vars_listbox = tk.Listbox(vars_frame, selectmode=tk.MULTIPLE, justify=tk.CENTER)
+        vars_listbox.bind('<<ListboxSelect>>', lambda x: vars_update(self, x))
         for num_column in self.numeric_columns_list:
-            self.vars_listbox.insert(tk.END, num_column)
+            vars_listbox.insert(tk.END, num_column)
+        for var in self.pp_vars:
+            i = vars_listbox.get(0, tk.END).index(var)
+            vars_listbox.select_set(i)
+        vars_listbox.config(height=listbox_height)
+        vars_listbox.pack(side=tk.LEFT)
 
-        if not self.pp_vars == None:
-            for var in self.pp_vars:
-                i = self.vars_listbox.get(0, tk.END).index(var)
-                print(i)
-                self.vars_listbox.select_set(i)
-        # vars_listbox.select_set(0, END)  # all columns selected by default
-        # update this select_set to go off of which vars from the column list are on
-        # based on whats in the ini (pp_vars) instead of just selecting all
-        self.vars_listbox.config(height=self.listbox_height)
-        self.vars_listbox.pack(side=tk.LEFT)
+        vars_scrollbar = tk.Scrollbar(vars_frame)
+        vars_listbox.config(yscrollcommand=vars_scrollbar.set)
+        vars_scrollbar.config(command=vars_listbox.yview)
+        vars_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self.vars_scrollbar = tk.Scrollbar(self.vars_frame)
-        self.vars_listbox.config(yscrollcommand=self.vars_scrollbar.set)
-        self.vars_scrollbar.config(command=self.vars_listbox.yview)
-        self.vars_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        # PP KIND CONTROL FRAME
+        kind_frame = tk.Frame(self)
+        kind_frame.grid(row=0, column=3, padx=pad_size)
 
-        # hue control
-        self.hue_frame = tk.Frame(self)
-        self.hue_frame.grid(row=0, column=2, padx=self.pad_size)
-
-        self.hue_label = tk.Label(self.hue_frame, text='Column that determines hue:')
-        self.hue_label.pack()
-
-        self.hue_option = tk.OptionMenu(self.hue_frame, self.pp_hue, 'None', *self.columns_list)
-        self.hue_option.pack()
-
-        # kind control
-        self.kind_frame = tk.Frame(self)
-        self.kind_frame.grid(row=0, column=3, padx=self.pad_size)
-
-        self.kind_label = tk.Label(self.kind_frame, text='Fit regression line:')
-        self.kind_label.pack()
+        kind_label = tk.Label(kind_frame, text='Fit regression line:')
+        kind_label.pack()
 
         def update_text():
-            self.kind_checkbox.config(text=str(self.pp_kind.get()))
-        self.kind_checkbox = tk.Checkbutton(self.kind_frame, variable=self.pp_kind, onvalue='reg',
+            kind_checkbox.config(text=str(self.pp_kind.get()))
+        kind_checkbox = tk.Checkbutton(kind_frame, variable=self.pp_kind, onvalue='reg',
                                     offvalue='scatter', command=update_text, relief=tk.RAISED)
-        self.kind_checkbox.pack()
+        kind_checkbox.pack()
         update_text()
 
-        # diag kind control
-        self.diag_kind_frame = tk.Frame(self)
-        self.diag_kind_frame.grid(row=0, column=4, padx=self.pad_size)
+        # PP DIAG KIND CONTROL FRAME
+        diag_kind_frame = tk.Frame(self)
+        diag_kind_frame.grid(row=0, column=4, padx=pad_size)
 
-        self.diag_kind_label = tk.Label(
-            self.diag_kind_frame, text='Graph type along diagonal:')
-        self.diag_kind_label.pack()
+        diag_kind_label = tk.Label(
+            diag_kind_frame, text='Graph type along diagonal:')
+        diag_kind_label.pack()
 
-        self.diag_kind_option = tk.OptionMenu(
-            self.diag_kind_frame, self.pp_diag_kind, *self.diag_kind_list)
-        self.diag_kind_option.pack()
+        diag_kind_option = tk.OptionMenu(
+            diag_kind_frame, self.pp_diag_kind, *self.diag_kind_list)
+        diag_kind_option.pack()
 
-        # button controls
-        self.button_frame = tk.Frame(self)
-        self.button_frame.grid(row=0, column=5, padx=self.pad_size)
+        # BUTTON CONTROL FRAME
+        button_frame = tk.Frame(self)
+        button_frame.grid(row=0, column=5, padx=pad_size)
 
-        self.preview_button = tk.Button(
-            self.button_frame, text='Preview Settings', command=lambda: self.preview_on_select(figure, EDA_Canvas))
-        self.preview_button.pack()
+        preview_button = tk.Button(
+            button_frame, text='Preview Settings', command=lambda: self.preview_on_select(figure, EDA_Canvas))
+        preview_button.pack()
 
-        self.apply_button = tk.Button(
-            self.button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
-        self.apply_button.pack()
+        apply_button = tk.Button(
+            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
+        apply_button.pack()
 
     def preview_on_select(self, fig, canvas):
-        self.preview_hue = self.pp_hue.get()
-        if self.preview_hue == 'None':
-            self.preview_hue = None
-        self.items = self.vars_listbox.curselection()
-        self.preview_vars = [self.numeric_columns_list[int(item)] for item in self.items]
-        if self.preview_vars == []:
-            self.preview_vars = None
-        self.preview_kind = self.pp_kind.get()
-        self.preview_diag_kind = self.pp_diag_kind.get()
+        preview_hue = self.pp_hue.get()
+        if preview_hue == 'None':
+            preview_hue = None
+        preview_vars = self.pp_vars
+        if not all(preview_vars) or preview_vars == ():
+            preview_vars = None
+        preview_kind = self.pp_kind.get()
+        preview_diag_kind = self.pp_diag_kind.get()
 
-        print('PP ON PREVIEW:')
-        print('Hue: ', self.preview_hue)
-        print('Vars: ', self.preview_vars)
-        print('kind: ', self.preview_kind)
-        print('Diag Kind: ', self.preview_diag_kind)
-        self.pp = sns.pairplot(data=self.data, hue=self.preview_hue, vars=self.preview_vars, kind=self.preview_kind, diag_kind=self.preview_diag_kind)
-        self.pp.savefig('pp.png')
+        print('--PP ON PREVIEW--')
+        print('Vars: ', preview_vars, type(preview_vars))
+        print('Hue: ', preview_hue, type(preview_hue))
+        print('kind: ', preview_kind, type(preview_kind))
+        print('Diag Kind: ', preview_diag_kind, type(preview_diag_kind))
+
+        pp = sns.pairplot(data=self.data, hue=preview_hue, vars=preview_vars, kind=preview_kind, diag_kind=preview_diag_kind)
+        pp.savefig('pp.png')
         fig.clear()
         a = fig.add_subplot(111)
         img_arr = mpimg.imread('pp.png')
         a.imshow(img_arr)
         a.axis('off')
         canvas.draw()
-        # may have to make graph drawing a seperate function at some point since graphs will be drawn by listbox on select using ini settings, or here without using the ini settings
-        # the apply on select may as well select a listbox index just to recall the listbox on select graph redraw since it just updated the ini that will be used by the listbox redrawing
-        # but for this preview it will be based on the current settings and not ini
-        # could also just leave it as is and avoid complex function nonsense
 
     def apply_on_select(self, fig, canvas):
-        if not self.config.has_section('pairplot'):
-            self.config.add_section('pairplot')
+        config = self.config
 
-        self.apply_hue = self.pp_hue.get()
-        self.config.set('pairplot', 'hue', self.apply_hue)
-        if self.apply_hue == 'None':
-            self.apply_hue = None
-
-        self.items = self.vars_listbox.curselection()
-        self.apply_vars = [self.numeric_columns_list[int(item)] for item in self.items]
-        self.config.set('pairplot', 'vars', ','.join(self.apply_vars))
-        # ','.join(map(str, myList)) this does the same thing but for lists of ints
-        if self.apply_vars == []:
-            self.apply_vars = None
-
-        self.apply_kind = self.pp_kind.get()
-        self.config.set('pairplot', 'kind', self.apply_kind)
-
-        self.apply_diag_kind = self.pp_diag_kind.get()
-        self.config.set('pairplot', 'diag_kind', self.apply_diag_kind)
-
+        apply_hue = self.pp_hue.get()
+        config.set('pairplot', 'hue', apply_hue)
+        if apply_hue == 'None':
+            apply_hue = None
+        
+        apply_vars = self.pp_vars
+        if not all(apply_vars) or apply_vars == ():
+            apply_vars = tuple()
+        config.set('pairplot', 'vars', ','.join(apply_vars))
+        if not all(apply_vars) or apply_vars == ():
+            apply_vars = None
+        
+        apply_kind = self.pp_kind.get()
+        config.set('pairplot', 'kind', apply_kind)
+        
+        apply_diag_kind = self.pp_diag_kind.get()
+        config.set('pairplot', 'diag_kind', apply_diag_kind)
+        
         with open('datavis.ini', 'w') as configfile:
-            self.config.write(configfile)
+            config.write(configfile)
         configfile.close()
 
-        print('PP ON APPLY:')
-        print('Hue: ', self.apply_hue)
-        print('Vars: ', self.apply_vars)
-        print('Kind: ', self.apply_kind)
-        print('Diag Kind: ', self.apply_diag_kind)
-        self.pp = sns.pairplot(data=self.data, hue=self.apply_hue, vars=self.apply_vars, kind=self.apply_kind, diag_kind=self.apply_diag_kind)
-        self.pp.savefig('pp.png')
+        print('--PP ON APPLY--')
+        print('Vars: ', apply_vars, type(apply_vars))
+        print('Hue: ', apply_hue, type(apply_hue))
+        print('Kind: ', apply_kind, type(apply_kind))
+        print('Diag Kind: ', apply_diag_kind, type(apply_diag_kind))
+
+        pp = sns.pairplot(data=self.data, hue=apply_hue, vars=apply_vars, kind=apply_kind, diag_kind=apply_diag_kind)
+        pp.savefig('pp.png')
         fig.clear()
         a = fig.add_subplot(111)
         img_arr = mpimg.imread('pp.png')
@@ -208,331 +205,347 @@ class CM_Frame(tk.Frame):
         
         tk.Frame.__init__(self, root, **options)
 
-        self.config = ConfigParser()
-        self.config.read('datavis.ini')
-        self.data_loc = self.config.get('general', 'dataset_location')
-        self.data = pd.read_csv(self.data_loc, encoding='latin-1')
+        # Get ini options
+        self.config  = config = ConfigParser()
+        config.read('datavis.ini')
+        data_loc = config.get('general', 'dataset_location')
+        self.data = pd.read_csv(data_loc, encoding='latin-1')
+        self.data = self.data.dropna()
+        self.data = self.data.corr()
 
-        # set correlation matrix settings to defaults
-        # print numbers in cells?
-        self.cm_annot = tk.Variable(value='False')
-        # show color bar?
-        self.cm_cbar = tk.Variable(value='True')
-        # make cells square?
-        self.cm_square = tk.Variable(value='False')
+        # Default graph options
+        self.cm_annot = tk.BooleanVar(value='False') # print numbers in cells?
+        self.cm_cbar = tk.BooleanVar(value='True') # show color bar?
+        self.cm_square = tk.BooleanVar(value='False') # make cells square?
 
-        # set cm settings to previous user settings if applicable
-        if self.config.has_section('correlation'):
-            if self.config.has_option('correlation', 'annot'):
-                self.cm_annot = tk.Variable(value=self.config.get('correlation', 'annot'))
-            if self.config.has_option('correlation', 'cbar'):
-                self.cm_cbar = tk.Variable(value=self.config.get('correlation', 'cbar'))
-            if self.config.has_option('correlation', 'kind'):
-                self.cm_square = tk.Variable(value=self.config.get('correlation', 'kind'))
+        # Load graph options from ini, if they don't exist create them and set to default values
+        try:
+            self.cm_annot = tk.BooleanVar(value=config.get('correlation', 'annot'))
+            self.cm_cbar = tk.BooleanVar(value=config.get('correlation', 'cbar'))
+            self.cm_square = tk.BooleanVar(value=config.get('correlation', 'square'))
+        except:
+            if not config.has_section('correlation'):
+                config.add_section('correlation')
+            config.set('correlation', 'annot', str(self.cm_annot.get()))
+            config.set('correlation', 'cbar', str(self.cm_cbar.get()))
+            config.set('correlation', 'square', str(self.cm_square.get()))
+            with open('datavis.ini', 'w') as configfile:
+                config.write(configfile)
+            configfile.close()
 
-        self.pad_size = 50
+        # General frame settings
+        pad_size = 50
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(5, weight=1)
 
-        # annot control
-        self.annot_frame = tk.Frame(self)
-        self.annot_frame.grid(row=0, column=1, padx=self.pad_size)
+        # CM ANNOT CONTROL FRAME
+        annot_frame = tk.Frame(self)
+        annot_frame.grid(row=0, column=1, padx=pad_size)
 
-        self.annot_label = tk.Label(self.annot_frame, text='Show numbers in cells:')
-        self.annot_label.pack()
+        annot_label = tk.Label(annot_frame, text='Show numbers in cells:')
+        annot_label.pack()
 
         def update_annot_check():
-            self.annot_checkbox.config(text=str(self.cm_annot.get()))
-        self.annot_checkbox = tk.Checkbutton(self.annot_frame, variable=self.cm_annot, onvalue='True', offvalue='False', command=update_annot_check, relief=tk.RAISED)
-        self.annot_checkbox.pack()
+            annot_checkbox.config(text=str(self.cm_annot.get()))
+        annot_checkbox = tk.Checkbutton(annot_frame, variable=self.cm_annot, onvalue='True', offvalue='False', command=update_annot_check, relief=tk.RAISED)
+        annot_checkbox.pack()
         update_annot_check()
 
-        # cbar control
-        self.cbar_frame = tk.Frame(self)
-        self.cbar_frame.grid(row=0, column=2, padx=self.pad_size)
+        # CM CBAR CONTROL FRAME
+        cbar_frame = tk.Frame(self)
+        cbar_frame.grid(row=0, column=2, padx=pad_size)
 
-        self.cbar_label = tk.Label(self.cbar_frame, text='Show color bar:')
-        self.cbar_label.pack()
+        cbar_label = tk.Label(cbar_frame, text='Show color bar:')
+        cbar_label.pack()
 
         def update_cbar_check():
-            self.cbar_checkbox.config(text=str(self.cm_cbar.get()))
-        self.cbar_checkbox = tk.Checkbutton(self.cbar_frame, variable=self.cm_cbar, onvalue='True', offvalue='False', command=update_cbar_check, relief=tk.RAISED)
-        self.cbar_checkbox.pack()
+            cbar_checkbox.config(text=str(self.cm_cbar.get()))
+        cbar_checkbox = tk.Checkbutton(cbar_frame, variable=self.cm_cbar, onvalue='True', offvalue='False', command=update_cbar_check, relief=tk.RAISED)
+        cbar_checkbox.pack()
         update_cbar_check()
 
-        # square control
-        self.square_frame = tk.Frame(self)
-        self.square_frame.grid(row=0, column=3, padx=self.pad_size)
+        # CM SQUARE CONTROL FRAME
+        square_frame = tk.Frame(self)
+        square_frame.grid(row=0, column=3, padx=pad_size)
 
-        self.square_label = tk.Label(self.square_frame, text='Make cells square:')
-        self.square_label.pack()
+        square_label = tk.Label(square_frame, text='Make cells square:')
+        square_label.pack()
 
         def update_square_check():
-            self.square_checkbox.config(text=str(self.cm_square.get()))
-        self.square_checkbox = tk.Checkbutton(
-            self.square_frame, variable=self.cm_square, onvalue='True', offvalue='False', command=update_square_check, relief=tk.RAISED)
-        self.square_checkbox.pack()
+            square_checkbox.config(text=str(self.cm_square.get()))
+        square_checkbox = tk.Checkbutton(
+            square_frame, variable=self.cm_square, onvalue='True', offvalue='False', command=update_square_check, relief=tk.RAISED)
+        square_checkbox.pack()
         update_square_check()
 
-        # button controls
-        self.button_frame = tk.Frame(self)
-        self.button_frame.grid(row=0, column=4, padx=self.pad_size)
+        # CM BUTTON CONTROL FRAME
+        button_frame = tk.Frame(self)
+        button_frame.grid(row=0, column=4, padx=pad_size)
 
-        self.preview_button = tk.Button(
-            self.button_frame, text='Preview Settings', command=lambda: self.preview_on_select(figure, EDA_Canvas))
-        self.preview_button.pack()
+        preview_button = tk.Button(
+            button_frame, text='Preview Settings', command=lambda: self.preview_on_select(figure, EDA_Canvas))
+        preview_button.pack()
 
-        self.apply_button = tk.Button(
-            self.button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
-        self.apply_button.pack()
+        apply_button = tk.Button(
+            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
+        apply_button.pack()
 
     def preview_on_select(self, fig, canvas):
-        self.preview_annot = self.cm_annot
-        self.preview_cbar = self.cm_cbar
-        self.preview_square = self.cm_square
+        preview_annot = self.cm_annot.get()
+        preview_cbar = self.cm_cbar.get()
+        preview_square = self.cm_square.get()
 
-        print('CM ON PREVIEW:')
-        print('Annot: ', self.preview_annot)
-        print('Cbar: ', self.preview_cbar)
-        print('Square: ', self.preview_square)
+        print('--CM ON PREVIEW--')
+        print('Annot: ', preview_annot, type(preview_annot))
+        print('Cbar: ', preview_cbar, type(preview_cbar))
+        print('Square: ', preview_square, type(preview_square))
+
         fig.clear()
         a = fig.add_subplot(111)
-        sns.heatmap(data=self.data, annot=self.preview_annot, cbar=self.preview_cbar, square=self.preview_square, ax=a)
+        sns.heatmap(data=self.data, annot=preview_annot, cbar=preview_cbar, square=preview_square, ax=a)
         canvas.draw()
 
     def apply_on_select(self, fig, canvas):
-        if not self.config.has_section('correlation'):
-            self.config.add_section('correlation')
+        config = self.config
 
-        self.apply_annot = self.cm_annot
-        self.config.set('correlation', 'annot', self.apply_annot)
+        apply_annot = self.cm_annot.get()
+        config.set('correlation', 'annot', str(apply_annot))
 
-        self.apply_cbar = self.cm_cbar
-        self.config.set('correlation', 'cbar', self.apply_cbar)
+        apply_cbar = self.cm_cbar.get()
+        config.set('correlation', 'cbar', str(apply_cbar))
 
-        self.apply_square = self.cm_square
-        self.config.set('correlation', 'square', self.apply_square)
+        apply_square = self.cm_square.get()
+        config.set('correlation', 'square', str(apply_square))
 
         with open('datavis.ini', 'w') as configfile:
-            self.config.write(configfile)
+            config.write(configfile)
         configfile.close()
 
-        print('CM ON APPLY:')
-        print('Annot: ', self.apply_annot)
-        print('Cbar: ', self.apply_cbar)
-        print('Sqaure: ', self.apply_square)
+        print('--CM ON APPLY--')
+        print('Annot: ', apply_annot, type(apply_annot))
+        print('Cbar: ', apply_cbar, type(apply_cbar))
+        print('Square: ', apply_square, type(apply_square))
+        
         fig.clear()
         a = fig.add_subplot(111)
-        sns.heatmap(data=self.data, annot=self.apply_annot, cbar=self.apply_cbar, square=self.apply_square, ax=a)
+        sns.heatmap(data=self.data, annot=apply_annot, cbar=apply_cbar, square=apply_square, ax=a)
         canvas.draw()
 
 class BP_Frame(tk.Frame):
     def __init__(self, root, figure, EDA_Canvas, **options):
+        
         tk.Frame.__init__(self, root, **options)
 
-        self.config = ConfigParser()
-        self.config.read('datavis.ini')
-        self.data_loc = self.config.get('general', 'dataset_location')
+        # Get ini options
+        self.config = config = ConfigParser()
+        config.read('datavis.ini')
+        self.data_loc = config.get('general', 'dataset_location')
         self.data = pd.read_csv(self.data_loc, encoding='latin-1')
 
-        self.columns = self.data.columns
-        self.numeric_columns = self.data.select_dtypes(exclude=['object'])
-        self.columns_list = list()
+        # Lists for listboxes and option menus
+        numeric_columns = self.data.select_dtypes(exclude=['object'])
         self.numeric_columns_list = list()
+        for num_col in numeric_columns:
+            self.numeric_columns_list.append(num_col)
+        
+        # Default graph options
+        self.bp_x = tk.Variable(value='None') # column for x
+        self.bp_y = tk.Variable(value='None') # column for y
+        self.bp_hue = tk.Variable(value='None') # which column determines hue?
+        self.bp_ci = tk.Variable(value='None') # show confidence intervals?
 
-        for column in self.columns:
-            self.columns_list.append(column)
+        # Load graph options from ini, if they don't exist create them and set to default values
+        try:
+            self.bp_x = tk.Variable(value=config.get('bar', 'x'))
+            self.bp_y = tk.Variable(value=config.get('bar', 'y'))
+            self.bp_hue = tk.Variable(value=config.get('bar', 'hue'))
+            self.bp_ci = tk.Variable(value=config.get('bar', 'ci'))
+        except:
+            if not config.has_section('bar'):
+                config.add_section('bar')
+            config.set('bar', 'x', self.bp_x.get())
+            config.set('bar', 'y', self.bp_y.get())
+            config.set('bar', 'hue', self.bp_hue.get())
+            config.set('bar', 'ci', self.bp_ci.get())
+            with open('datavis.ini', 'w') as configfile:
+                config.write(configfile)
+            configfile.close()
 
-        for column in self.numeric_columns:
-            self.numeric_columns_list.append(column)
-
-        # set barplot settings to defaults
-        # column for x
-        self.bp_x = None
-        # column for y
-        self.bp_y = None
-        # which column determines hue?
-        self.bp_hue = None
-        # show confidence intervals?
-        self.bp_ci = tk.Variable(value='None')
-
-        # set bp settings to previous user settings if applicable
-        if self.config.has_section('bar'):
-            if self.config.has_option('bar', 'x'):
-                self.bp_x = self.config.get('bar', 'x').split(',')
-                if self.bp_x == 'None' or self.bp_x == ['']:
-                    self.bp_x = None
-            if self.config.has_option('bar', 'y'):
-                self.bp_y = self.config.get('bar', 'y').split(',')
-                if self.bp_y == 'None' or self.bp_y == ['']:
-                    self.bp_y = None
-            if self.config.has_option('bar', 'hue'):
-                self.bp_hue = self.config.get('bar', 'hue').split(',')
-                if self.bp_hue == 'None' or self.bp_hue == ['']:
-                    self.bp_hue = None
-            if self.config.has_option('bar', 'ci'):
-                self.bp_ci = tk.Variable(value=self.config.get('bar', 'ci'))
-                if self.bp_ci == 'None':
-                    self.bp_ci = None
-
-        self.pad_size = 50
-        self.listbox_height = 4
+        # General frame settings
+        pad_size = 50
+        listbox_height = 4
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(6, weight=1)
 
-        # x control
-        self.x_frame = tk.Frame(self)
-        self.x_frame.grid(row=0, column=1, padx=self.pad_size)
+        # BP X CONTROL FRAME
+        x_frame = tk.Frame(self)
+        x_frame.grid(row=0, column=1, padx=pad_size)
 
-        self.x_label = tk.Label(self.x_frame, text='Column to use for x:')
-        self.x_label.pack()
+        x_label = tk.Label(x_frame, text='Column to use for x:')
+        x_label.pack()
 
-        self.x_listbox = tk.Listbox(self.x_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
-        for column in self.columns_list:
-            self.x_listbox.insert(tk.END, column)
-        self.x_listbox.config(height=self.listbox_height)
-        self.x_listbox.pack(side=tk.LEFT)
-
-        self.x_scrollbar = tk.Scrollbar(self.x_frame)
-        self.x_listbox.config(yscrollcommand=self.x_scrollbar.set)
-        self.x_scrollbar.config(command=self.x_listbox.yview)
-        self.x_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        # y control
-        self.y_frame = tk.Frame(self)
-        self.y_frame.grid(row=0, column=2, padx=self.pad_size)
-
-        self.y_label = tk.Label(self.y_frame, text='Column to use for y:')
-        self.y_label.pack()
-
-        self.y_listbox = tk.Listbox(self.y_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
+        def x_update(self, event):
+            lbTup = event.widget.curselection()
+            for tup in lbTup:
+                print (tup, type(tup))
+                self.bp_x = tk.Variable(value=self.numeric_columns_list[tup])
+        
+        x_listbox = tk.Listbox(x_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
+        x_listbox.bind('<<ListboxSelect>>', lambda x: x_update(self, x))
         for column in self.numeric_columns_list:
-            self.y_listbox.insert(tk.END, column)
-        self.y_listbox.config(height=self.listbox_height)
-        self.y_listbox.pack(side=tk.LEFT)
+            x_listbox.insert(tk.END, column)
+        x_listbox.config(height=listbox_height)
+        x_listbox.pack(side=tk.LEFT)
 
-        self.y_scrollbar = tk.Scrollbar(self.y_frame)
-        self.y_listbox.config(yscrollcommand=self.y_scrollbar.set)
-        self.y_scrollbar.config(command=self.y_listbox.yview)
-        self.y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        x_scrollbar = tk.Scrollbar(x_frame)
+        x_listbox.config(yscrollcommand=x_scrollbar.set)
+        x_scrollbar.config(command=x_listbox.yview)
+        x_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # hue control
-        self.hue_frame = tk.Frame(self)
-        self.hue_frame.grid(row=0, column=3, padx=self.pad_size)
+        # BP Y CONTROL FRAME
+        y_frame = tk.Frame(self)
+        y_frame.grid(row=0, column=2, padx=pad_size)
 
-        self.hue_label = tk.Label(self.hue_frame, text='Column to use for hue:')
-        self.hue_label.pack()
+        y_label = tk.Label(y_frame, text='Column to use for y:')
+        y_label.pack()
 
-        self.hue_listbox = tk.Listbox(self.hue_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
-        for column in self.columns_list:
-            self.hue_listbox.insert(tk.END, column)
-        self.hue_listbox.config(height=self.listbox_height)
-        self.hue_listbox.pack(side=tk.LEFT)
+        def y_update(self, event):
+            lbTup = event.widget.curselection()
+            for tup in lbTup:
+                print (tup, type(tup))
+                self.bp_y = tk.Variable(value=self.numeric_columns_list[tup])
 
-        self.hue_scrollbar = tk.Scrollbar(self.hue_frame)
-        self.hue_listbox.config(yscrollcommand=self.hue_scrollbar.set)
-        self.hue_scrollbar.config(command=self.hue_listbox.yview)
-        self.hue_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        y_listbox = tk.Listbox(y_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
+        y_listbox.bind('<<ListboxSelect>>', lambda x: y_update(self, x))
+        for column in self.numeric_columns_list:
+            y_listbox.insert(tk.END, column)
+        y_listbox.config(height=listbox_height)
+        y_listbox.pack(side=tk.LEFT)
 
-        # confidence interval control
-        self.ci_frame = tk.Frame(self)
-        self.ci_frame.grid(row=0, column=4, padx=self.pad_size)
+        y_scrollbar = tk.Scrollbar(y_frame)
+        y_listbox.config(yscrollcommand=y_scrollbar.set)
+        y_scrollbar.config(command=y_listbox.yview)
+        y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self.ci_label = tk.Label(self.ci_frame, text='Confidence interval:')
-        self.ci_label.pack()
+        # BP HUE CONTROL FRAME
+        hue_frame = tk.Frame(self)
+        hue_frame.grid(row=0, column=3, padx=pad_size)
+        hue_label = tk.Label(hue_frame, text='Column to use for hue:')
+        hue_label.pack()
+
+        def hue_update(self, event):
+            if self.bp_x.get() == '' or self.bp_x.get() == 'None' or self.bp_y.get() == '' or self.bp_y.get() == 'None':
+                pass
+            else:
+                lbTup = event.widget.curselection()
+                for tup in lbTup:
+                    self.bp_hue = tk.Variable(value=self.numeric_columns_list[tup])
+        
+        # AT SOME POINT SET THIS LBOX UP TO BE DISABLED UNTIL AN X AND Y ARE CHOSEN
+        hue_listbox = tk.Listbox(hue_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
+        hue_listbox.bind('<<ListboxSelect>>', lambda x: hue_update(self, x))
+        for column in self.numeric_columns_list:
+            hue_listbox.insert(tk.END, column)
+        hue_listbox.config(height=listbox_height)
+        hue_listbox.pack(side=tk.LEFT)
+
+        hue_scrollbar = tk.Scrollbar(hue_frame)
+        hue_listbox.config(yscrollcommand=hue_scrollbar.set)
+        hue_scrollbar.config(command=hue_listbox.yview)
+        hue_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # BP CI CONTROL FRAME
+        ci_frame = tk.Frame(self)
+        ci_frame.grid(row=0, column=4, padx=pad_size)
+
+        ci_label = tk.Label(ci_frame, text='Confidence interval:')
+        ci_label.pack()
 
         def update_text():
-            self.text = str(self.bp_ci.get())
-            if self.text == 'sd':
-                self.text = 'Standard Dev.'
-            self.ci_checkbox.config(text=self.text)
-        self.ci_checkbox = tk.Checkbutton(self.ci_frame, variable=self.bp_ci, onvalue='sd',
+            text = str(self.bp_ci.get())
+            if text == 'sd':
+                text = 'Standard Dev.'
+            ci_checkbox.config(text=text)
+        ci_checkbox = tk.Checkbutton(ci_frame, variable=self.bp_ci, onvalue='sd',
                                   offvalue='None', command=update_text, relief=tk.RAISED)
-        self.ci_checkbox.pack()
+        ci_checkbox.pack()
         update_text()
 
-        # button controls
-        self.button_frame = tk.Frame(self)
-        self.button_frame.grid(row=0, column=5, padx=self.pad_size)
+        # BP BUTTON CONTROL FRAME
+        button_frame = tk.Frame(self)
+        button_frame.grid(row=0, column=5, padx=pad_size)
 
-        self.preview_button = tk.Button(
-            self.button_frame, text='Preview Settings', command=self.preview_on_select)
-        self.preview_button.pack()
+        preview_button = tk.Button(
+            button_frame, text='Preview Settings', command= lambda: self.preview_on_select(figure, EDA_Canvas))
+        preview_button.pack()
 
-        self.apply_button = tk.Button(
-            self.button_frame, text='Apply Settings', command=self.apply_on_select)
-        self.apply_button.pack()
+        apply_button = tk.Button(
+            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
+        apply_button.pack()
 
     def preview_on_select(self, fig, canvas):
-            self.x_items = self.x_listbox.curselection()
-            self.preview_x = [self.columns_list[int(x_item)] for x_item in self.x_items]
-            if self.preview_x == []:
-                self.preview_x = None
-            
-            self.y_items = self.y_listbox.curselection()
-            self.preview_y = [self.numeric_columns_list[int(y_item)] for y_item in self.y_items]
-            if self.preview_y == []:
-                self.preview_y = None
+        preview_x = self.bp_x.get()
+        if preview_x == '' or preview_x == 'None':
+            preview_x = None
+        preview_y = self.bp_y.get()
+        if preview_y == '' or preview_y == 'None':
+            preview_y = None
+        preview_hue = self.bp_hue.get()
+        if preview_hue == '' or preview_hue == 'None':
+            preview_hue = None
+        preview_ci = self.bp_ci.get()
+        if preview_ci == '95':
+            preview_ci = 95
+        elif preview_ci == 'None':
+            preview_ci = None
 
-            self.hue_items = self.hue_listbox.curselection()
-            self.preview_hue = [self.numeric_columns_list[int(hue_item)] for hue_item in self.hue_items]
-            if self.preview_hue == []:
-                self.preview_hue = None
-            
-            self.preview_ci = self.bp_ci.get()
-            if self.preview_ci == 'None':
-                self.preview_ci = None
-
-            print('BP ON PREVIEW:')
-            print('X: ', self.preview_x)
-            print('Y: ', self.preview_y)
-            print('Hue: ', self.preview_hue)
-            print('Ci: ', self.preview_ci)
-            fig.clear()
-            a = fig.add_subplot(111)
-            sns.barplot(data=self.data, x=self.preview_x, y=self.preview_y,
-                        hue=self.preview_hue, ci=self.preview_ci, ax=a)
-            canvas.draw()
-
-    def apply_on_select(self, fig, canvas):
-        if not self.config.has_section('bar'):
-            self.config.add_section('bar')
-
-        self.x_items = self.x_listbox.curselection()
-        self.apply_x = [self.columns_list[int(x_item)] for x_item in self.x_items]
-        self.config.set('bar', 'x', ','.join(self.apply_x))
-        if self.apply_x == []:
-            self.apply_x = None
-
-        self.y_items = self.y_listbox.curselection()
-        self.apply_y = [self.numeric_columns_list[int(y_item)] for y_item in self.y_items]
-        self.config.set('bar', 'y', ','.join(self.apply_y))
-        if self.apply_y == []:
-            self.apply_y = None
-
-        self.hue_items = self.hue_listbox.curselection()
-        self.apply_hue = [self.numeric_columns_list[int(hue_item)] for hue_item in self.hue_items]
-        self.config.set('bar', 'hue', ','.join(self.apply_hue))
-        if self.apply_hue == []:
-            self.apply_hue = None
-
-        self.apply_ci = self.bp_ci.get()
-        if self.apply_ci == 'None':
-            self.apply_ci = None
-        self.config.set('bar', 'ci', self.apply_ci)
-
-        with open('datavis.ini', 'w') as configfile:
-            self.config.write(configfile)
-        configfile.close()
-
-        print('BP ON APPLY:')
-        print('X: ', self.apply_x)
-        print('Y: ', self.apply_y)
-        print('Hue: ', self.apply_hue)
-        print('Ci: ', self.apply_ci)
+        print('--BP ON PREVIEW--')
+        print('X: ', preview_x, type(preview_x))
+        print('Y: ', preview_y, type(preview_y))
+        print('Hue: ', preview_hue, type(preview_hue))
+        print('Ci: ', preview_ci, type(preview_ci))
         fig.clear()
         a = fig.add_subplot(111)
-        sns.barplot(data=self.data, x=self.apply_x, y=self.apply_y, hue=self.apply_hue, ci=self.apply_ci, ax=a)
+        sns.barplot(data=self.data, x=preview_x, y=preview_y, hue=preview_hue, ci=preview_ci, ax=a)
+        canvas.draw()
+
+    def apply_on_select(self, fig, canvas):
+        config = self.config
+
+        apply_x = self.bp_x.get()
+        if apply_x == '' or apply_x == 'None':
+            apply_x = None
+        config.set('bar', 'x', apply_x)
+
+        apply_y = self.bp_y.get()
+        if apply_y == '' or apply_y == 'None':
+            apply_y = None
+        config.set('bar', 'y', apply_y)
+        
+        apply_hue = self.bp_hue.get()
+        if apply_hue == '' or apply_hue == 'None':
+            apply_hue = None
+        config.set('bar', 'hue', apply_hue)
+        
+        apply_ci = self.bp_ci.get()
+        config.set('bar', 'ci', apply_ci)
+        if apply_ci == '95':
+            apply_ci = 95
+        elif apply_ci == 'None':
+            apply_ci = None
+
+        with open('datavis.ini', 'w') as configfile:
+            config.write(configfile)
+        configfile.close()
+
+        print('--BP ON APPLY--')
+        print('X: ', apply_x, type(apply_x))
+        print('Y: ', apply_y, type(apply_y))
+        print('Hue: ', apply_hue, type(apply_hue))
+        print('Ci: ', apply_ci, type(apply_ci))
+        fig.clear()
+        a = fig.add_subplot(111)
+        sns.barplot(data=self.data, x=apply_x, y=apply_y, hue=apply_hue, ci=apply_ci, ax=a)
         canvas.draw()
 
 class SP_Frame(tk.Frame):
@@ -548,7 +561,6 @@ class SP_Frame(tk.Frame):
         label.grid()
         self.notification = notification =tk.Label(frame, text='Under Construction')
         notification.grid()
-
 
 class PCA_Frame(tk.Frame):
     def __init__(self, root, figure, EDA_Canvas, **options):

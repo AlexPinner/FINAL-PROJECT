@@ -6,7 +6,7 @@ import matplotlib.image as mpimg
 
 class EDA_Listbox(tk.Listbox):
     def __init__(self, root, fig, canvas, frames):
-        "Creates a listbox to select EDA graphs"
+        "Creates a listbox for selecting EDA graphs"
         tk.Listbox.__init__(self, root)
 
         self.config = ConfigParser()
@@ -40,7 +40,7 @@ class EDA_Listbox(tk.Listbox):
         return listbox
     
     def Len_Max(self, list_items):
-        "Returns the length of the longest list item"
+        "Returns the length of the longest item in a list"
         len_max = 0
         for m in list_items:
             if len(m) > len_max:
@@ -48,9 +48,11 @@ class EDA_Listbox(tk.Listbox):
         return len_max
     
     def raise_frame(self, frame):
+        "Raises a frame"
         frame.tkraise()
 
     def EDA_onSelect(self, event, fig, canvas, frames):
+        "Creates selected graph type using current settings and displays it"
         self.w = w = event.widget
         config = self.config
         if(w.curselection()):
@@ -79,60 +81,29 @@ class EDA_Listbox(tk.Listbox):
                     data = pd.read_csv(data_loc, encoding='latin-1')
                     data = data.dropna()
 
-                    # default options
-                    pp_hue = tk.Variable(value=None)
-                    pp_vars = tk.Variable(value=None)
-                    pp_kind = tk.Variable(value='scatter')
-                    pp_diag_kind = tk.Variable(value='auto')
-
-                    # import user graph settings, if they don't exist create them and set to default values
-                    try:
-                        pp_hue = tk.Variable(value=config.get('pairplot', 'hue'))  # which column determines color of points
-                        pp_vars = tk.Variable(value=config.get('pairplot', 'vars').split(','))  # which columns to use in plot
-                        pp_kind = tk.Variable(value=config.get('pairplot', 'kind'))  # fit regression line?
-                        pp_diag_kind = tk.Variable(value=config.get('pairplot', 'diag_kind'))  # graph type to use along diagonal
-                    except:
-                        if not config.has_section('pairplot'):
-                            config.add_section('pairplot')
-                        config.set('pairplot', 'hue', str(pp_hue.get()))
-                        config.set('pairplot', 'vars', str(pp_vars.get()))
-                        config.set('pairplot', 'kind', str(pp_kind.get()))
-                        config.set('pairplot', 'diag_kind', str(pp_diag_kind.get()))
-                        with open('datavis.ini', 'w') as configfile:
-                            config.write(configfile)
-                        configfile.close()
-
-                    # prepare variables for graph
-                    if pp_hue.get() == 'None' or pp_hue.get() == '':
+                    # import user graph settings
+                    pp_hue = tk.Variable(value=config.get('pairplot', 'hue'))  # which column determines color of points
+                    if pp_hue.get() == 'None':
                         pp_hue = None
                     else:
                         pp_hue = pp_hue.get()
-
-                    if pp_vars.get() == 'None' or pp_vars.get() == '':
+                    pp_vars = tuple(config.get('pairplot', 'vars').split(','))  # which columns to use in plot
+                    if not all(pp_vars):
                         pp_vars = None
-                    else:
-                        pp_vars = pp_vars.get()
+                    pp_kind = tk.Variable(value=config.get('pairplot', 'kind'))  # fit regression line?
+                    pp_kind = pp_kind.get()
+                    pp_diag_kind = tk.Variable(value=config.get('pairplot', 'diag_kind'))  # graph type to use along diagonal
+                    pp_diag_kind = pp_diag_kind.get()
 
-                    if pp_kind.get() == 'None' or pp_kind.get() == '':
-                        pp_kind = None
-                    else:
-                        pp_kind = pp_kind.get()
-
-                    if pp_diag_kind.get() == 'None' or pp_diag_kind.get() == '':
-                        pp_diag_kind = None
-                    else:
-                        pp_diag_kind = pp_diag_kind.get()
-                    
                     # terminal feedback for debugging
                     print('--EDA LB onSelect PP--')
-                    print('Pairplot options were:')
-                    print('hue: ', pp_hue, type(pp_hue))
                     print('vars: ', pp_vars, type(pp_vars))
+                    print('hue: ', pp_hue, type(pp_hue))
                     print('kind: ', pp_kind, type(pp_kind))
                     print('diag_kind: ', pp_diag_kind, type(pp_diag_kind))
 
                     # create and display custom graph
-                    pp = sns.pairplot(data=data, hue=None, vars=pp_vars, kind='scatter', diag_kind='auto')
+                    pp = sns.pairplot(data=data, hue=pp_hue, vars=pp_vars, kind=pp_kind, diag_kind=pp_diag_kind)
                     pp.savefig('pp.png')
                     fig.clear()
                     a = fig.add_subplot(111)
@@ -164,72 +135,16 @@ class EDA_Listbox(tk.Listbox):
                     data = data.dropna()
                     data = data.corr()
 
-                    # default options
-                    cm_annot = tk.Variable(value=None)
-                    cm_cbar = tk.Variable(value=True)
-                    cm_square = tk.Variable(value=False)
-
-                    # import user graph settings, if they don't exist create them and set to default values
-                    try:
-                        cm_annot = tk.Variable(value=config.get('correlation', 'annot'))  # print numbers in cells?
-                        cm_cbar = tk.Variable(value=config.get('correlation', 'cbar'))  # show colobar?
-                        cm_square = tk.Variable(value=config.get('correlation', 'square'))  # make cells square?
-                    except:
-                        if not config.has_section('correlation'):
-                            config.add_section('correlation')
-                        config.set('correlation', 'annot', str(cm_annot.get()))
-                        config.set('correlation', 'cbar', str(cm_cbar.get()))
-                        config.set('correlation', 'square', str(cm_square.get()))
-                        with open('datavis.ini', 'w') as configfile:
-                            config.write(configfile)
-                        configfile.close()
-                    
-                    # prepare variables for graph
-                    try:
-                        cm_annot = bool(int(cm_annot.get()))
-                    except:
-                        if cm_annot.get() == 'None' or cm_annot.get() == '':
-                            cm_annot = None
-                        else:
-                            cm_annot = cm_annot.get()
-                    try:
-                        cm_cbar = bool(int(cm_cbar.get()))
-                    except:
-                        if cm_cbar.get() == 'None' or cm_cbar.get() == '':
-                            cm_cbar = None
-                        else:
-                            cm_cbar = cm_cbar.get()
-                    try:
-                        cm_square = bool(int(cm_square.get()))
-                    except:
-                        if cm_square.get() == 'None' or cm_square.get() == '':
-                            cm_square = None
-                        else:
-                            cm_square = cm_square.get()
-
-
-
-                    """
-                    print("Annot: ", cm_annot.get(), type(cm_annot.get()))
-                    if cm_annot.get() == 'None' or ' ':
-                        cm_annot = None
-                    elif cm_annot.get() == '0' or '1':
-                        cm_annot = int(cm_annot.get())
-                    print("Cbar: ", cm_cbar.get())
-                    if cm_cbar.get() == '0' or '1':
-                        cm_cbar = int(cm_cbar.get())
-                    elif cm_cbar.get() == 'None' or ' ':
-                        cm_cbar = None
-                    print("Square: ", cm_square.get())
-                    if cm_square.get() == '0' or '1':
-                        cm_square = int(cm_square.get())
-                    elif cm_square.get() == 'None' or ' ':
-                        cm_square = None
-                    """
+                    # import user graph settings
+                    cm_annot = tk.BooleanVar(value=config.get('correlation', 'annot'))  # print numbers in cells?
+                    cm_annot = cm_annot.get()
+                    cm_cbar = tk.BooleanVar(value=config.get('correlation', 'cbar'))  # show color bar?
+                    cm_cbar = cm_cbar.get()
+                    cm_square = tk.BooleanVar(value=config.get('correlation', 'square'))  # make cells square?
+                    cm_square = cm_square.get()
 
                     # terminal feedback for debugging
                     print('--EDA LB onSelect CM--')
-                    print('Correlation Matrix options were:')
                     print('annot: ', cm_annot, type(cm_annot))
                     print('cbar: ', cm_cbar, type(cm_cbar))
                     print('square: ', cm_square, type(cm_square))
@@ -265,22 +180,11 @@ class EDA_Listbox(tk.Listbox):
                     bp_hue = tk.Variable(value=None)
                     bp_ci = tk.Variable(value=95)
 
-                    # import user graph settings, if they don't exist create them and set to default values
-                    try:
-                        bp_x = tk.Variable(value=config.get('bar', 'x'))  # x var
-                        bp_y = tk.Variable(value=config.get('bar', 'y'))  # y var
-                        bp_hue = tk.Variable(value=config.get('bar', 'hue'))  # hue column
-                        bp_ci = tk.Variable(value=config.get('bar', 'ci'))  # confidence intervals
-                    except:
-                        if not config.has_section('bar'):
-                            config.add_section('bar')
-                        config.set('bar', 'x', str(bp_x.get()))
-                        config.set('bar', 'y', str(bp_y.get()))
-                        config.set('bar', 'hue', str(bp_hue.get()))
-                        config.set('bar', 'ci', str(bp_ci.get()))
-                        with open('datavis.ini', 'w') as configfile:
-                            config.write(configfile)
-                        configfile.close()
+                    # import user graph settings
+                    bp_x = tk.Variable(value=config.get('bar', 'x'))  # x var
+                    bp_y = tk.Variable(value=config.get('bar', 'y'))  # y var
+                    bp_hue = tk.Variable(value=config.get('bar', 'hue'))  # hue column
+                    bp_ci = tk.Variable(value=config.get('bar', 'ci'))  # confidence intervals
 
                     # prepare variables for graph
                     if bp_x.get() == 'None' or bp_x.get() == '':
@@ -305,7 +209,6 @@ class EDA_Listbox(tk.Listbox):
                     
                     # terminal feedback for debugging
                     print('--EDA LB onSelect BP--')
-                    print('Barplot options were:')
                     print('x: ', bp_x, type(bp_x))
                     print('y: ', bp_y, type(bp_y))
                     print('hue: ', bp_hue, type(bp_hue))

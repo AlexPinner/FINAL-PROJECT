@@ -17,8 +17,6 @@ import DV_EDA_Listbox
 import DV_Table
 import DV_Toolbar
 
-import ppControlsTest
-
 
 class DataVis():
     def __init__(self):
@@ -26,14 +24,14 @@ class DataVis():
         # create main window
         self.root = root = tk.Tk()
         root.title('DataVis')
-        root.geometry('{}x{}'.format(2400, 1200))                   # REMOVE THIS ANNN....
+        #root.geometry('{}x{}'.format(2400, 1200))                   # REMOVE THIS ANNN....
 
         # print(font.names()) #all available fonts
         self.myfont = myfont = tk.font.nametofont('TkDefaultFont')
-        myfont.configure(size=24)                                   # ......NNND THIS, to get normal resolution on non mac monitors
+        #myfont.configure(size=24)                                   # ......NNND THIS, to get normal resolution on non mac monitors
         # Pre-brake fonts and window size so it doesn't happen later
-        self.data = data = sns.load_dataset('Iris')
-        sns.pairplot(data=data)                                     # ALSO REMOVE THIS SINCE IT'S NOT NEEDED ON NON MAC MONITORS
+        #self.data = data = sns.load_dataset('Iris')
+        #sns.pairplot(data=data)                                     # ALSO REMOVE THIS SINCE IT'S NOT NEEDED ON NON MAC MONITORS
 
         # create notebook (thing that controls the tabs)
         self.note = note = ttk.Notebook(root)
@@ -115,8 +113,8 @@ class DataVis():
         self.EDA_Canvas = EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Canvas_Frame)
         EDA_Canvas.get_tk_widget().grid(sticky='nsew')
 
-        #self.pp_controls = pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
-        self.pp_controls = pp_controls = ppControlsTest.PP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
+        self.pp_controls = pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
+        #self.pp_controls = pp_controls = ppControlsTest.PP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
         self.cm_controls = cm_controls = DV_EDA_Control_Panels.CM_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
         self.bp_controls = bp_controls = DV_EDA_Control_Panels.BP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
         self.sp_controls = sp_controls = DV_EDA_Control_Panels.SP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
