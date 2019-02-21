@@ -37,18 +37,17 @@ class DataVis():
         #sns.pairplot(data=data)                                     # ALSO REMOVE THIS SINCE IT'S NOT NEEDED ON NON MAC MONITORS
 
         # if config file doesn't exist, create it
-        if os.path.isfile('datavis.ini'):
+        if not os.path.isfile('datavis.ini'):
             file = open('datavis.ini', 'w')
             file.close()
-            config = ConfigParser()
-            config.read('datavis.ini')
-            if os.path.isfile('auto-mpg.csv'):
-                if not config.has_section('general'):
-                    config.add_section('general')
-                config.set('general', 'dataset_location', 'auto-mpg.csv')
-                with open('datavis.ini', 'w') as configfile:
-                    config.write(configfile)
-                configfile.close()
+        config = ConfigParser()
+        config.read('datavis.ini')
+        if os.path.isfile('auto-mpg.csv') and not config.has_section('general'):
+            config.add_section('general')
+            config.set('general', 'dataset_location', 'auto-mpg.csv')
+            with open('datavis.ini', 'w') as configfile:
+                config.write(configfile)
+            configfile.close()
                 
         # create notebook (thing that controls the tabs)
         self.note = note = ttk.Notebook(root)
