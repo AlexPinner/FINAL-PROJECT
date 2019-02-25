@@ -2,16 +2,10 @@ import os.path
 import time
 import tkinter as tk
 from configparser import ConfigParser
-from tkinter import font, ttk
+from tkinter import ttk
 
 import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import seaborn as sns
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                               NavigationToolbar2Tk)
-from matplotlib.figure import Figure
 
 import DV_DC_Control_Panels
 import DV_DC_Listbox
@@ -30,7 +24,7 @@ class DataVis():
         #root.geometry('{}x{}'.format(2400, 1200))                   # REMOVE THIS ANNN....
 
         # print(font.names()) #all available fonts
-        self.myfont = myfont = tk.font.nametofont('TkDefaultFont')
+        #self.myfont = myfont = tk.font.nametofont('TkDefaultFont')
         #myfont.configure(size=24)                                   # ......NNND THIS, to get normal resolution on non mac monitors
         # Pre-brake fonts and window size so it doesn't happen later
         #self.data = data = sns.load_dataset('Iris')
@@ -125,16 +119,16 @@ class DataVis():
         EDA_Canvas_Frame.grid_columnconfigure(0, weight=1)
         EDA_Top_Pane.add(EDA_Canvas_Frame, stretch='always')
 
-        self.fig = fig = Figure()
-        self.EDA_Canvas = EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Canvas_Frame)
-        EDA_Canvas.get_tk_widget().grid(sticky='nsew')
+        #self.fig = fig = Figure()
+        #self.EDA_Canvas = EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Canvas_Frame)
+        #EDA_Canvas.get_tk_widget().grid(sticky='nsew')
 
-        self.pp_controls = pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
-        #self.pp_controls = pp_controls = ppControlsTest.PP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
-        self.cm_controls = cm_controls = DV_EDA_Control_Panels.CM_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
-        self.bp_controls = bp_controls = DV_EDA_Control_Panels.BP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
-        self.sp_controls = sp_controls = DV_EDA_Control_Panels.SP_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
-        self.pca_controls = pca_controls = DV_EDA_Control_Panels.PCA_Frame(EDA_Controls_Frame, fig, EDA_Canvas)
+        self.pp_controls = pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        #self.pp_controls = pp_controls = ppControlsTest.PP_Frame(EDA_Controls_Frame, EDA_Canvas)
+        self.cm_controls = cm_controls = DV_EDA_Control_Panels.CM_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        self.bp_controls = bp_controls = DV_EDA_Control_Panels.BP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        self.sp_controls = sp_controls = DV_EDA_Control_Panels.SP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        self.pca_controls = pca_controls = DV_EDA_Control_Panels.PCA_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
 
         self.control_frames = control_frames = {}
 
@@ -143,7 +137,7 @@ class DataVis():
             control_frames[frame._name] = frame
         pp_controls.tkraise()
 
-        self.EDA_Listbox = EDA_Listbox = DV_EDA_Listbox.EDA_Listbox(EDA_Listbox_Frame, fig, EDA_Canvas, control_frames)
+        self.EDA_Listbox = EDA_Listbox = DV_EDA_Listbox.EDA_Listbox(EDA_Listbox_Frame, EDA_Canvas_Frame, control_frames)
 
 
         ###############################
@@ -166,7 +160,7 @@ def main():
     dv = DataVis()
     dv.root.mainloop()
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
     main()
 
 #################################################################################################

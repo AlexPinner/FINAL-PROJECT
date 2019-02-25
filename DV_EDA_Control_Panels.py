@@ -5,8 +5,10 @@ import matplotlib.image as mpimg
 import pandas as pd
 import seaborn as sns
 
+import DV_ZoomableCanvas
+
 class PP_Frame(tk.Frame):
-    def __init__(self, root, figure, EDA_Canvas, **options):
+    def __init__(self, root, canvas_frame, **options):
         
         tk.Frame.__init__(self, root, **options)
 
@@ -132,14 +134,14 @@ class PP_Frame(tk.Frame):
         button_frame.grid(row=0, column=5, padx=pad_size)
 
         preview_button = tk.Button(
-            button_frame, text='Preview Settings', command=lambda: self.preview_on_select(figure, EDA_Canvas))
+            button_frame, text='Preview Settings', command=lambda: self.preview_on_select(canvas_frame))
         preview_button.pack()
 
         apply_button = tk.Button(
-            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
+            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(canvas_frame))
         apply_button.pack()
 
-    def preview_on_select(self, fig, canvas):
+    def preview_on_select(self, canvas_frame):
         preview_hue = self.pp_hue.get()
         if preview_hue == 'None':
             preview_hue = None
@@ -157,14 +159,19 @@ class PP_Frame(tk.Frame):
 
         pp = sns.pairplot(data=self.data, hue=preview_hue, vars=preview_vars, kind=preview_kind, diag_kind=preview_diag_kind)
         pp.savefig('pp.png')
+        """
         fig.clear()
         a = fig.add_subplot(111)
         img_arr = mpimg.imread('pp.png')
         a.imshow(img_arr)
         a.axis('off')
         canvas.draw()
+        """
+        file = 'pp.png'
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()
 
-    def apply_on_select(self, fig, canvas):
+    def apply_on_select(self, canvas_frame):
         config = self.config
 
         apply_hue = self.pp_hue.get()
@@ -197,15 +204,20 @@ class PP_Frame(tk.Frame):
 
         pp = sns.pairplot(data=self.data, hue=apply_hue, vars=apply_vars, kind=apply_kind, diag_kind=apply_diag_kind)
         pp.savefig('pp.png')
+        """
         fig.clear()
         a = fig.add_subplot(111)
         img_arr = mpimg.imread('pp.png')
         a.imshow(img_arr)
         a.axis('off')
         canvas.draw()
+        """
+        file = 'pp.png'
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()
 
 class CM_Frame(tk.Frame):
-    def __init__(self, root, figure, EDA_Canvas, **options):
+    def __init__(self, root, canvas_frame, **options):
         
         tk.Frame.__init__(self, root, **options)
 
@@ -290,14 +302,14 @@ class CM_Frame(tk.Frame):
         button_frame.grid(row=0, column=4, padx=pad_size)
 
         preview_button = tk.Button(
-            button_frame, text='Preview Settings', command=lambda: self.preview_on_select(figure, EDA_Canvas))
+            button_frame, text='Preview Settings', command=lambda: self.preview_on_select(canvas_frame))
         preview_button.pack()
 
         apply_button = tk.Button(
-            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
+            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(canvas_frame))
         apply_button.pack()
 
-    def preview_on_select(self, fig, canvas):
+    def preview_on_select(self, canvas_frame):
         preview_annot = self.cm_annot.get()
         preview_cbar = self.cm_cbar.get()
         preview_square = self.cm_square.get()
@@ -306,13 +318,18 @@ class CM_Frame(tk.Frame):
         print('Annot: ', preview_annot, type(preview_annot))
         print('Cbar: ', preview_cbar, type(preview_cbar))
         print('Square: ', preview_square, type(preview_square))
-
+        """
         fig.clear()
         a = fig.add_subplot(111)
-        sns.heatmap(data=self.data, annot=preview_annot, cbar=preview_cbar, square=preview_square, ax=a)
         canvas.draw()
+        """
+        cm = sns.heatmap(data=self.data, annot=preview_annot, cbar=preview_cbar, square=preview_square)
+        cm.get_figure().savefig('cm.png')
+        file = 'cm.png'
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()
 
-    def apply_on_select(self, fig, canvas):
+    def apply_on_select(self, canvas_frame):
         config = self.config
 
         apply_annot = self.cm_annot.get()
@@ -332,14 +349,19 @@ class CM_Frame(tk.Frame):
         print('Annot: ', apply_annot, type(apply_annot))
         print('Cbar: ', apply_cbar, type(apply_cbar))
         print('Square: ', apply_square, type(apply_square))
-        
+        """
         fig.clear()
         a = fig.add_subplot(111)
-        sns.heatmap(data=self.data, annot=apply_annot, cbar=apply_cbar, square=apply_square, ax=a)
         canvas.draw()
+        """
+        cm = sns.heatmap(data=self.data, annot=apply_annot, cbar=apply_cbar, square=apply_square)
+        cm.get_figure().savefig('cm.png')
+        file = 'cm.png'
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()
 
 class BP_Frame(tk.Frame):
-    def __init__(self, root, figure, EDA_Canvas, **options):
+    def __init__(self, root, canvas_frame, **options):
         
         tk.Frame.__init__(self, root, **options)
 
@@ -487,14 +509,14 @@ class BP_Frame(tk.Frame):
         button_frame.grid(row=0, column=5, padx=pad_size)
 
         preview_button = tk.Button(
-            button_frame, text='Preview Settings', command= lambda: self.preview_on_select(figure, EDA_Canvas))
+            button_frame, text='Preview Settings', command= lambda: self.preview_on_select(canvas_frame))
         preview_button.pack()
 
         apply_button = tk.Button(
-            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(figure, EDA_Canvas))
+            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(canvas_frame))
         apply_button.pack()
 
-    def preview_on_select(self, fig, canvas):
+    def preview_on_select(self, canvas_frame):
         preview_x = self.bp_x.get()
         if preview_x == '' or preview_x == 'None':
             preview_x = None
@@ -515,28 +537,37 @@ class BP_Frame(tk.Frame):
         print('Y: ', preview_y, type(preview_y))
         print('Hue: ', preview_hue, type(preview_hue))
         print('Ci: ', preview_ci, type(preview_ci))
+        bp = sns.barplot(data=self.data, x=preview_x, y=preview_y, hue=preview_hue, ci=preview_ci)
+        bp.figure.savefig('bp.png')
+        """
         fig.clear()
         a = fig.add_subplot(111)
-        sns.barplot(data=self.data, x=preview_x, y=preview_y, hue=preview_hue, ci=preview_ci, ax=a)
+        img_arr = mpimg.imread('bp.png')
+        a.imshow(img_arr)
+        a.axis('off')
         canvas.draw()
+        """
+        file = 'bp.png'
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()
 
-    def apply_on_select(self, fig, canvas):
+    def apply_on_select(self, canvas_frame):
         config = self.config
 
         apply_x = self.bp_x.get()
+        config.set('bar', 'x', apply_x)
         if apply_x == '' or apply_x == 'None':
             apply_x = None
-        config.set('bar', 'x', apply_x)
 
         apply_y = self.bp_y.get()
+        config.set('bar', 'y', apply_y)
         if apply_y == '' or apply_y == 'None':
             apply_y = None
-        config.set('bar', 'y', apply_y)
         
         apply_hue = self.bp_hue.get()
+        config.set('bar', 'hue', apply_hue)
         if apply_hue == '' or apply_hue == 'None':
             apply_hue = None
-        config.set('bar', 'hue', apply_hue)
         
         apply_ci = self.bp_ci.get()
         config.set('bar', 'ci', apply_ci)
@@ -554,13 +585,23 @@ class BP_Frame(tk.Frame):
         print('Y: ', apply_y, type(apply_y))
         print('Hue: ', apply_hue, type(apply_hue))
         print('Ci: ', apply_ci, type(apply_ci))
+        bp = sns.barplot(data=self.data, x=apply_x, y=apply_y, hue=apply_hue, ci=apply_ci)
+        bp.figure.savefig('bp.png')
+        """
         fig.clear()
         a = fig.add_subplot(111)
-        sns.barplot(data=self.data, x=apply_x, y=apply_y, hue=apply_hue, ci=apply_ci, ax=a)
+        img_arr = mpimg.imread('bp.png')
+        a.imshow(img_arr)
+        a.axis('off')
         canvas.draw()
+        """
+        file = 'bp.png'
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()
+
 
 class SP_Frame(tk.Frame):
-    def __init__(self, root, figure, EDA_Canvas, **options):
+    def __init__(self, root, canvas_frame, **options):
         tk.Frame.__init__(self, root, **options)
         
         self.grid_columnconfigure(0, weight=1)
@@ -574,7 +615,7 @@ class SP_Frame(tk.Frame):
         notification.grid()
 
 class PCA_Frame(tk.Frame):
-    def __init__(self, root, figure, EDA_Canvas, **options):
+    def __init__(self, root, canvas_frame, **options):
         tk.Frame.__init__(self, root, **options)
 
         self.grid_columnconfigure(0, weight=1)

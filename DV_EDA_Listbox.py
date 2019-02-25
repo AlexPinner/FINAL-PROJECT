@@ -1,11 +1,17 @@
 import tkinter as tk
+from configparser import ConfigParser
+
+import matplotlib
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from configparser import ConfigParser
-import matplotlib.image as mpimg
+
+import DV_ZoomableCanvas
+
 
 class EDA_Listbox(tk.Listbox):
-    def __init__(self, root, fig, canvas, frames):
+    def __init__(self, root, canvas_frame, frames):
         "Creates a listbox for selecting EDA graphs"
         tk.Listbox.__init__(self, root)
 
@@ -18,7 +24,7 @@ class EDA_Listbox(tk.Listbox):
         #print("Keys: ", frames.keys())
         #print("Usable Name? ", frames['!pp_frame'])
         # REMEMBER: TO PASS EVENT TO MULTI PARAM BOUND FUNCTION YOU MUST USE 'lambda x:' INSTEAD OF 'lambda:' (x IS THE EVENT!)
-        EDA_Listbox.bind('<<ListboxSelect>>', lambda x: self.EDA_onSelect(x, fig, canvas, frames))
+        EDA_Listbox.bind('<<ListboxSelect>>', lambda x: self.EDA_onSelect(x, canvas_frame, frames))
 
     def Create_Listbox(self, root, list_items):
         "Returns a listbox populated with list_items"
@@ -51,7 +57,7 @@ class EDA_Listbox(tk.Listbox):
         "Raises a frame"
         frame.tkraise()
 
-    def EDA_onSelect(self, event, fig, canvas, frames):
+    def EDA_onSelect(self, event, canvas_frame, frames):
         "Creates selected graph type using current settings and displays it"
         self.w = w = event.widget
         config = self.config
@@ -64,12 +70,20 @@ class EDA_Listbox(tk.Listbox):
             config.read('datavis.ini')
 
             # display 'please stand by' image
+            """
             fig.clear()
             a = fig.add_subplot(111)
             img_arr = mpimg.imread('PSB.png')
             a.imshow(img_arr)
             a.axis('off')
             canvas.draw()
+            """
+
+            for widget in canvas_frame.winfo_children():
+                widget.destroy()
+            file = 'PSB.png'
+            canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+            canvas.grid()
             
             if (index == 0):  # pairplot
                 # raise pp controls
@@ -103,26 +117,42 @@ class EDA_Listbox(tk.Listbox):
                     print('diag_kind: ', pp_diag_kind, type(pp_diag_kind))
 
                     # create and display custom graph
+                    plt.clf()
                     pp = sns.pairplot(data=data, hue=pp_hue, vars=pp_vars, kind=pp_kind, diag_kind=pp_diag_kind)
                     pp.savefig('pp.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
                     img_arr = mpimg.imread('pp.png')
                     a.imshow(img_arr)
                     a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'pp.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
                     
                 else:  # go with default fig creation
                     data = sns.load_dataset('Iris')
                     data = data.dropna()
+                    plt.clf()
                     pp = sns.pairplot(data=data, kind='reg', hue='species')
                     pp.savefig('pp.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
                     img_arr = mpimg.imread('pp.png')
                     a.imshow(img_arr)
                     a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'pp.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
 
             elif (index == 1):  # correlation matrix
                 # raise cm controls
@@ -150,19 +180,43 @@ class EDA_Listbox(tk.Listbox):
                     print('square: ', cm_square, type(cm_square))
                     
                     # create and display custom graph
+                    plt.clf()
+                    cm = sns.heatmap(data=data, annot=cm_annot, cbar=cm_cbar, square=cm_square)
+                    cm.get_figure().savefig('cm.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
-                    sns.heatmap(data=data, annot=cm_annot, cbar=cm_cbar, square=cm_square, ax=a)
+                    img_arr = mpimg.imread('cm.png')
+                    a.imshow(img_arr)
+                    a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'cm.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
 
                 else:  # go with default fig creation
                     data = sns.load_dataset('titanic')
                     data = data.dropna()
                     data = data.corr()
+                    plt.clf()
+                    cm = sns.heatmap(data=data)
+                    cm.get_figure().savefig('cm.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
-                    sns.heatmap(data=data, ax=a)
+                    img_arr = mpimg.imread('cm.png')
+                    a.imshow(img_arr)
+                    a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'cm.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
 
             elif (index == 2):  # bar chart
                 # raise bp controls
@@ -215,18 +269,42 @@ class EDA_Listbox(tk.Listbox):
                     print('ci: ', bp_ci, type(bp_ci))
 
                     # create and display custom graph
+                    plt.clf()
+                    bp = sns.barplot(data=data, x=bp_x, y=bp_y, hue=bp_hue, ci=bp_ci)
+                    bp.figure.savefig('bp.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
-                    sns.barplot(data=data, x=bp_x, y=bp_y, hue=bp_hue, ci=bp_ci, ax=a)
+                    img_arr = mpimg.imread('bp.png')
+                    a.imshow(img_arr)
+                    a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'bp.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
 
                 else:  # go with default fig creation
                     data = sns.load_dataset("flights")
                     data = data.dropna()
+                    plt.clf()
+                    bp = sns.barplot(data=data, x='month', y='passengers', ci=None)
+                    bp.figure.savefig('bp.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
-                    sns.barplot(data=data, x='month', y='passengers', ci=None, ax=a)
+                    img_arr = mpimg.imread('bp.png')
+                    a.imshow(img_arr)
+                    a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'bp.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
 
             elif (index == 3):  # scatter plot
                 # raise sp controls
@@ -248,7 +326,7 @@ class EDA_Listbox(tk.Listbox):
                     # fit linear regression line?
                     sp_fit_reg = config.get('scatter', 'fit_reg')
                     
-                    # create and display custom graph
+                    # terminal feedback for debugging
                     print('SP ON LISTBOX:')
                     print('X: ', sp_x)
                     print('Y: ', sp_y)
@@ -256,27 +334,45 @@ class EDA_Listbox(tk.Listbox):
                     print('Legend: ', sp_legend)
                     print('Scatter: ', sp_scatter)
                     print('Fit Reg: ', sp_fit_reg)
+
+                    # create and display custom graph
+                    plt.clf()
                     sp = sns.lmplot(data=data, x=sp_x, y=sp_y, hue=sp_hue,
                                     legend=sp_legend, scatter=sp_scatter, fit_reg=sp_fit_reg)
                     sp.savefig('sp.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
                     img_arr = mpimg.imread('sp.png')
                     a.imshow(img_arr)
                     a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'sp.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
 
                 else:  # go with default fig creation
                     data = sns.load_dataset("tips")
                     data = data.dropna()
+                    plt.clf()
                     sp = sns.lmplot(data=data, x="total_bill", y="tip")
                     sp.savefig('sp.png')
+                    """
                     fig.clear()
                     a = fig.add_subplot(111)
                     img_arr = mpimg.imread('sp.png')
                     a.imshow(img_arr)
                     a.axis('off')
                     canvas.draw()
+                    """
+                    file = 'sp.png'
+                    for widget in canvas_frame.winfo_children():
+                        widget.destroy()
+                    canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+                    canvas.grid()
 
             elif (index == 4):  # pca
                 # raise pca controls
@@ -287,5 +383,3 @@ class EDA_Listbox(tk.Listbox):
 
                 else:  # go with default fig creation
                     print('You selected item %d: "%s"' % (index, value))
-                    fig.clear()
-                    canvas.draw()

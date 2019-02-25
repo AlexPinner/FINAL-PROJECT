@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.filedialog
 import matplotlib.image as mpimg
 from configparser import ConfigParser
 
@@ -10,9 +11,12 @@ class DV_Toolbar(tk.Frame):
 
         self.toolbar = tk.Frame(master=root, bd=1, relief='raised')
         self.toolbar.grid(sticky='new')
-        self.photo = tk.PhotoImage(file="open_file.png")
-        self.import_btn = tk.Button(self.toolbar, image=self.photo, command=self.Select_Dataset)
-        self.import_btn.grid(sticky='w')
+        self.import_photo = tk.PhotoImage(file="open_file.png")
+        self.import_btn = tk.Button(self.toolbar, image=self.import_photo, command=lambda: self.Select_Dataset(root))
+        self.import_btn.grid(row=0, column=1, sticky='nw')
+        self.reset_photo = tk.PhotoImage(file="reset_ini.png")
+        self.reset_btn = tk.Button(self.toolbar, image=self.reset_photo, command=lambda: self.ini_Reset_Dialog(root))
+        self.reset_btn.grid(row=0, column=0, sticky='nw')
 
         self.config = ConfigParser()
 
@@ -22,14 +26,11 @@ class DV_Toolbar(tk.Frame):
             ("csv files", "*.csv"), ("xls files", "*.xls"), ("all files", "*.*")))
         self.config.read('datavis.ini')
         self.curr = self.config.get('general', 'dataset_location')
-        print('tests')
         if self.filename and (self.curr != self.filename):  # new dataset?
-            if not self.config.has_option('settings_reset_warning'):
-                config.set('general', 'settings_reset_warning', 'True')
+            if not self.config.has_option('general', 'settings_reset_warning'):
+                self.config.set('general', 'settings_reset_warning', 'True')
             if self.config.getboolean('general', 'settings_reset_warning'):  # ask again?
-                print('ask?')
                 if self.Settings_Reset_Warning(root):  # continue?
-                    print('updating')
                     self.Update_Data_Loc(self.filename)  # change dataset
             else:
                 self.Update_Data_Loc(self.filename)
@@ -65,7 +66,6 @@ class DV_Toolbar(tk.Frame):
             with open('datavis.ini', 'w') as configfile:
                 self.config.write(configfile)
             configfile.close()
-        print('Cont.get: '+str(self.cont.get()))
         return self.cont.get()
 
     def Update_Data_Loc(self, string):
@@ -75,11 +75,58 @@ class DV_Toolbar(tk.Frame):
         with open('datavis.ini', 'w') as configfile:
             self.config.write(configfile)
         configfile.close()
+        self.Reset_ini(1)
 
     def Reset_ini(self, degree):  # FINISH ME
-        "Reset ini to various degrees. 0 is all settings. 1 is only settings affected by dataset changes."
+        "Reset ini to various degrees. 0 is all settings. 1 is only settings affected by dataset changes"
+        config = self.config
         if degree == 0:  # full reset
-            pass
+            if config.has_section('pairplot'):
+                config.remove_section('pairplot')
+            if config.has_section('correlation'):
+                config.remove_section('correlation')
+            if config.has_section('bar'):
+                config.remove_section('bar')
+            if config.has_section('scatter'):
+                config.remove_section('scatter')
+            if config.has_section('pca'):
+                config.remove_section('pca')
+            with open('datavis.ini', 'w') as configfile:
+                config.write(configfile)
+            configfile.close()
         else:  # partial reset
-            if self.config.has_section('pairplot'):
-                pass
+            if config.has_section('pairplot'):
+                config.set('pairplot', 'hue', 'None')
+                config.set('pairplot', 'vars', '')
+            if config.has_section('bar'):
+                config.set('bar', 'x', 'None')
+                config.set('bar', 'y', 'None')
+                config.set('bar', 'hue', 'None')
+            if config.has_section('scatter'):
+                config.remove_section('scatter')
+            if config.has_section('pca'):
+                config.remove_section('pca')
+            with open('datavis.ini', 'w') as configfile:
+                config.write(configfile)
+            configfile.close()
+    
+    def ini_Reset_Dialog(self, root):
+        "Ask user if they want to reset ini and to what degree"
+        self.dlg = tk.Toplevel(master=root)
+        self.dlg.transient(root)
+        self.dlg.grab_set()
+
+        def reset_and_close(self, degree):
+            self.Reset_ini(degree)
+            self.dlg.destroy()
+
+        all_lbl = tk.Label(self.dlg, text='Reset all settings?')
+        all_lbl.grid(row=0, column=0)
+        all_btn = tk.Button(self.dlg, text='All', command=lambda: reset_and_close(self, 0))
+        all_btn.grid(row=1, column=0)
+        some_lbl = tk.Label(self.dlg, text='Reset settings reliant on dataframe?')
+        some_lbl.grid(row=0, column=1)
+        some_btn = tk.Button(self.dlg, text='Some', command=lambda: reset_and_close(self, 1))
+        some_btn.grid(row=1, column=1)
+        cancel_btn = tk.Button(self.dlg, text='Cancel', command=lambda: self.dlg.destroy())
+        cancel_btn.grid(columnspan=2)
