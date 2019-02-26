@@ -9,9 +9,9 @@ import seaborn as sns
 
 import DV_DC_Control_Panels
 import DV_DC_Listbox
+import DV_DC_Table
 import DV_EDA_Control_Panels
 import DV_EDA_Listbox
-import DV_DC_Table
 import DV_Toolbar
 
 

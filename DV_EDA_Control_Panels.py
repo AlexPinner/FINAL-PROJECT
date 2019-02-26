@@ -171,6 +171,8 @@ class PP_Frame(tk.Frame):
         canvas.draw()
         """
         file = 'pp.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
 
@@ -217,6 +219,8 @@ class PP_Frame(tk.Frame):
         canvas.draw()
         """
         file = 'pp.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
 
@@ -331,6 +335,8 @@ class CM_Frame(tk.Frame):
         cm = sns.heatmap(data=self.data, annot=preview_annot, cbar=preview_cbar, square=preview_square)
         cm.get_figure().savefig('cm.png', bbox_inches='tight')
         file = 'cm.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
 
@@ -363,6 +369,8 @@ class CM_Frame(tk.Frame):
         cm = sns.heatmap(data=self.data, annot=apply_annot, cbar=apply_cbar, square=apply_square)
         cm.get_figure().savefig('cm.png', bbox_inches='tight')
         file = 'cm.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
 
@@ -557,6 +565,8 @@ class BP_Frame(tk.Frame):
         canvas.draw()
         """
         file = 'bp.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
 
@@ -608,6 +618,8 @@ class BP_Frame(tk.Frame):
         canvas.draw()
         """
         file = 'bp.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
 
