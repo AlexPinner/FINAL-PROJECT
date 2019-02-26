@@ -288,7 +288,7 @@ class ZoomCanvas:
         self.__imframe.destroy()
 
 def edaSelect(canvasObj):
-    filename='cm.png'
+    filename='danny.png'
     canvasObj.destroy() # keep this or leave it out when switching the displayed image?
     canvasObj = ZoomCanvas(root, filename)
     canvasObj.grid(row=0, column=0)

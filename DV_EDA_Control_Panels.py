@@ -2,10 +2,12 @@ import tkinter as tk
 from configparser import ConfigParser
 
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 import DV_ZoomableCanvas
+
 
 class PP_Frame(tk.Frame):
     def __init__(self, root, canvas_frame, **options):
@@ -157,6 +159,7 @@ class PP_Frame(tk.Frame):
         print('kind: ', preview_kind, type(preview_kind))
         print('Diag Kind: ', preview_diag_kind, type(preview_diag_kind))
 
+        plt.clf()
         pp = sns.pairplot(data=self.data, hue=preview_hue, vars=preview_vars, kind=preview_kind, diag_kind=preview_diag_kind)
         pp.savefig('pp.png')
         """
@@ -202,6 +205,7 @@ class PP_Frame(tk.Frame):
         print('Kind: ', apply_kind, type(apply_kind))
         print('Diag Kind: ', apply_diag_kind, type(apply_diag_kind))
 
+        plt.clf()
         pp = sns.pairplot(data=self.data, hue=apply_hue, vars=apply_vars, kind=apply_kind, diag_kind=apply_diag_kind)
         pp.savefig('pp.png')
         """
@@ -323,6 +327,7 @@ class CM_Frame(tk.Frame):
         a = fig.add_subplot(111)
         canvas.draw()
         """
+        plt.clf()
         cm = sns.heatmap(data=self.data, annot=preview_annot, cbar=preview_cbar, square=preview_square)
         cm.get_figure().savefig('cm.png')
         file = 'cm.png'
@@ -354,6 +359,7 @@ class CM_Frame(tk.Frame):
         a = fig.add_subplot(111)
         canvas.draw()
         """
+        plt.clf()
         cm = sns.heatmap(data=self.data, annot=apply_annot, cbar=apply_cbar, square=apply_square)
         cm.get_figure().savefig('cm.png')
         file = 'cm.png'
@@ -537,6 +543,8 @@ class BP_Frame(tk.Frame):
         print('Y: ', preview_y, type(preview_y))
         print('Hue: ', preview_hue, type(preview_hue))
         print('Ci: ', preview_ci, type(preview_ci))
+
+        plt.clf()
         bp = sns.barplot(data=self.data, x=preview_x, y=preview_y, hue=preview_hue, ci=preview_ci)
         bp.figure.savefig('bp.png')
         """
@@ -585,6 +593,8 @@ class BP_Frame(tk.Frame):
         print('Y: ', apply_y, type(apply_y))
         print('Hue: ', apply_hue, type(apply_hue))
         print('Ci: ', apply_ci, type(apply_ci))
+
+        plt.clf()
         bp = sns.barplot(data=self.data, x=apply_x, y=apply_y, hue=apply_hue, ci=apply_ci)
         bp.figure.savefig('bp.png')
         """
