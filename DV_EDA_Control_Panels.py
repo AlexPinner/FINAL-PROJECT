@@ -329,7 +329,7 @@ class CM_Frame(tk.Frame):
         """
         plt.clf()
         cm = sns.heatmap(data=self.data, annot=preview_annot, cbar=preview_cbar, square=preview_square)
-        cm.get_figure().savefig('cm.png')
+        cm.get_figure().savefig('cm.png', bbox_inches='tight')
         file = 'cm.png'
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
@@ -361,7 +361,7 @@ class CM_Frame(tk.Frame):
         """
         plt.clf()
         cm = sns.heatmap(data=self.data, annot=apply_annot, cbar=apply_cbar, square=apply_square)
-        cm.get_figure().savefig('cm.png')
+        cm.get_figure().savefig('cm.png', bbox_inches='tight')
         file = 'cm.png'
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
@@ -546,7 +546,8 @@ class BP_Frame(tk.Frame):
 
         plt.clf()
         bp = sns.barplot(data=self.data, x=preview_x, y=preview_y, hue=preview_hue, ci=preview_ci)
-        bp.figure.savefig('bp.png')
+        plt.xticks(rotation=45)
+        bp.figure.savefig('bp.png', bbox_inches='tight')
         """
         fig.clear()
         a = fig.add_subplot(111)
@@ -596,7 +597,8 @@ class BP_Frame(tk.Frame):
 
         plt.clf()
         bp = sns.barplot(data=self.data, x=apply_x, y=apply_y, hue=apply_hue, ci=apply_ci)
-        bp.figure.savefig('bp.png')
+        plt.xticks(rotation=45)
+        bp.figure.savefig('bp.png', bbox_inches='tight')
         """
         fig.clear()
         a = fig.add_subplot(111)

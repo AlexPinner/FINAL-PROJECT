@@ -182,7 +182,7 @@ class EDA_Listbox(tk.Listbox):
                     # create and display custom graph
                     plt.clf()
                     cm = sns.heatmap(data=data, annot=cm_annot, cbar=cm_cbar, square=cm_square)
-                    cm.get_figure().savefig('cm.png')
+                    cm.get_figure().savefig('cm.png', bbox_inches='tight')
                     """
                     fig.clear()
                     a = fig.add_subplot(111)
@@ -203,7 +203,7 @@ class EDA_Listbox(tk.Listbox):
                     data = data.corr()
                     plt.clf()
                     cm = sns.heatmap(data=data)
-                    cm.get_figure().savefig('cm.png')
+                    cm.get_figure().savefig('cm.png', bbox_inches='tight')
                     """
                     fig.clear()
                     a = fig.add_subplot(111)
@@ -271,7 +271,8 @@ class EDA_Listbox(tk.Listbox):
                     # create and display custom graph
                     plt.clf()
                     bp = sns.barplot(data=data, x=bp_x, y=bp_y, hue=bp_hue, ci=bp_ci)
-                    bp.figure.savefig('bp.png')
+                    plt.xticks(rotation=45)
+                    bp.figure.savefig('bp.png', bbox_inches='tight')
                     """
                     fig.clear()
                     a = fig.add_subplot(111)
@@ -291,7 +292,8 @@ class EDA_Listbox(tk.Listbox):
                     data = data.dropna()
                     plt.clf()
                     bp = sns.barplot(data=data, x='month', y='passengers', ci=None)
-                    bp.figure.savefig('bp.png')
+                    plt.xticks(rotation=45)
+                    bp.figure.savefig('bp.png', bbox_inches='tight')
                     """
                     fig.clear()
                     a = fig.add_subplot(111)

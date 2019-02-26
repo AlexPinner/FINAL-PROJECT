@@ -3,7 +3,7 @@ from configparser import ConfigParser
 import pandas as pd
 import seaborn as sns
 
-class DV_Table(tk.Frame):
+class DV_DC_Table(tk.Frame):
     def __init__(self, root):
 
         tk.Frame.__init__(self, root)
@@ -46,12 +46,15 @@ class DV_Table(tk.Frame):
         col_num = 0
         for column in data:
             column_header = tk.Label(
-                self.inner_frame, text=str(column), relief='raised')
+                self.inner_frame, text=str(column), relief='raised', bg='snow3')
             column_header.grid(row=0, column=col_num, sticky='ew')
             row_num = 1
             for row in data[column]:
+                bg_color = 'snow'
+                if row_num % 2 == 0:
+                    bg_color = 'snow2'
                 column_data = tk.Label(
-                    self.inner_frame, text=str(row), relief='ridge')
+                    self.inner_frame, text=str(row), relief='ridge', bg=bg_color)
                 column_data.grid(row=row_num, column=col_num, sticky='ew')
                 row_num += 1
             col_num += 1

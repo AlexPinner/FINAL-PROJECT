@@ -11,7 +11,7 @@ import DV_DC_Control_Panels
 import DV_DC_Listbox
 import DV_EDA_Control_Panels
 import DV_EDA_Listbox
-import DV_Table
+import DV_DC_Table
 import DV_Toolbar
 
 
@@ -56,11 +56,11 @@ class DataVis():
         # Create tab for data cleaning
         #############################
         self.DC_Bottom_Pane = DC_Bottom_Pane = tk.PanedWindow(note)
-        DC_Bottom_Pane.config(orient='vertical', bd=1, sashwidth=4, bg='black')
+        DC_Bottom_Pane.config(orient='vertical', sashwidth=4)
         DC_Bottom_Pane.grid(sticky='nsew')
 
         self.DC_Top_Pane = DC_Top_Pane = tk.PanedWindow(DC_Bottom_Pane)
-        DC_Top_Pane.config(orient='horizontal', bd=1, sashwidth=4, bg='black')
+        DC_Top_Pane.config(orient='horizontal', sashwidth=4)
         DC_Top_Pane.grid(sticky='nsew')
         DC_Bottom_Pane.add(DC_Top_Pane, stretch='always')
 
@@ -81,7 +81,7 @@ class DataVis():
         DC_Table_Frame.grid_columnconfigure(0, weight=1)
         DC_Top_Pane.add(DC_Table_Frame, stretch='always')
 
-        self.table = table = DV_Table.DV_Table(DC_Table_Frame)
+        self.table = table = DV_DC_Table.DV_DC_Table(DC_Table_Frame)
         table.grid(sticky='nsew')
         
         # add various control frames here
@@ -113,7 +113,7 @@ class DataVis():
         EDA_Top_Pane.add(EDA_Listbox_Frame, stretch='never')
 
         self.EDA_Canvas_Frame = EDA_Canvas_Frame = tk.Frame(EDA_Top_Pane)
-        EDA_Canvas_Frame.config(bg='orange')
+        EDA_Canvas_Frame.config(bg='black')
         EDA_Canvas_Frame.grid(sticky='nsew')
         EDA_Canvas_Frame.grid_rowconfigure(0, weight=1)
         EDA_Canvas_Frame.grid_columnconfigure(0, weight=1)
@@ -123,19 +123,27 @@ class DataVis():
         #self.EDA_Canvas = EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Canvas_Frame)
         #EDA_Canvas.get_tk_widget().grid(sticky='nsew')
 
-        self.pp_controls = pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
-        #self.pp_controls = pp_controls = ppControlsTest.PP_Frame(EDA_Controls_Frame, EDA_Canvas)
-        self.cm_controls = cm_controls = DV_EDA_Control_Panels.CM_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
-        self.bp_controls = bp_controls = DV_EDA_Control_Panels.BP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
-        self.sp_controls = sp_controls = DV_EDA_Control_Panels.SP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
-        self.pca_controls = pca_controls = DV_EDA_Control_Panels.PCA_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        #pp_controls = ppControlsTest.PP_Frame(EDA_Controls_Frame, EDA_Canvas)
+        cm_controls = DV_EDA_Control_Panels.CM_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        bp_controls = DV_EDA_Control_Panels.BP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        sp_controls = DV_EDA_Control_Panels.SP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        pca_controls = DV_EDA_Control_Panels.PCA_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
+        placeholder_frame = tk.Frame(EDA_Controls_Frame)
+        placeholder_frame.grid(row=0, column=0, sticky='nsew')
+        placeholder_frame.grid_rowconfigure(0, weight=1)
+        placeholder_frame.grid_columnconfigure(0, weight=1)
+        hint_frame = tk.Frame(placeholder_frame)
+        hint_frame.grid(row=0, column=0)
+        select_start = tk.Label(hint_frame, text='Select a graph type to begin EDA')
+        select_start.grid(sticky='nsew')
 
         self.control_frames = control_frames = {}
 
         for frame in (pp_controls, cm_controls, bp_controls, sp_controls, pca_controls):
             frame.grid(row=0, column=0, sticky='nsew')
             control_frames[frame._name] = frame
-        pp_controls.tkraise()
+        placeholder_frame.tkraise()
 
         self.EDA_Listbox = EDA_Listbox = DV_EDA_Listbox.EDA_Listbox(EDA_Listbox_Frame, EDA_Canvas_Frame, control_frames)
 
