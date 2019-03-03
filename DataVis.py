@@ -49,7 +49,7 @@ class DataVis():
         #################
         # Create toolbar
         ###############
-        self.toolbar = toolbar = DV_Toolbar.DV_Toolbar(root)
+        self.toolbar = DV_Toolbar.DV_Toolbar(root)
         #toolbar.grid()
 
         ###############################
@@ -81,13 +81,32 @@ class DataVis():
         DC_Table_Frame.grid_columnconfigure(0, weight=1)
         DC_Top_Pane.add(DC_Table_Frame, stretch='always')
 
-        self.table = table = DV_DC_Table.DV_DC_Table(DC_Table_Frame)
+        self.table = table = DV_DC_Table.DV_DC_Table(DC_Table_Frame, None)
         table.grid(sticky='nsew')
         
-        # add various control frames here
-        # grid them all in same spot
+        find_replace_controls = DV_DC_Control_Panels.Find_Replace_Frame(DC_Controls_Frame, DC_Table_Frame)
+        scaling_controls = DV_DC_Control_Panels.Scaling_Frame(DC_Controls_Frame, DC_Table_Frame)
+        factorize_controls = DV_DC_Control_Panels.Factorize_Frame(DC_Controls_Frame, DC_Table_Frame)
+        feature_selection_controls = DV_DC_Control_Panels.Feature_Selection_Frame(DC_Controls_Frame, DC_Table_Frame)
+        #outlier_controls = DV_DC_Control_Panels.Outliers_Frame(DC_Controls_Frame, DC_Table_Frame)
+        DC_placeholder_frame = tk.Frame(DC_Controls_Frame)
+        DC_placeholder_frame.grid(row=0, column=0, sticky='nsew')
+        DC_placeholder_frame.grid_rowconfigure(0, weight=1)
+        DC_placeholder_frame.grid_columnconfigure(0, weight=1)
+        DC_hint_frame = tk.Frame(DC_placeholder_frame)
+        DC_hint_frame.grid(row=0, column=0)
+        DC_select_start = tk.Label(DC_hint_frame, text='Select an option to begin cleaning')
+        DC_select_start.grid(sticky='nsew')
 
-        self.DC_Listbox = DC_Listbox = DV_DC_Listbox.DC_Listbox(root=DC_Listbox_Frame)
+        self.DC_control_frames = DC_control_frames = {}
+
+        for frame in (find_replace_controls, scaling_controls, factorize_controls, feature_selection_controls):
+            frame.grid(row=0, column=0, sticky='nsew')
+            DC_control_frames[frame._name] = frame
+        
+        DC_placeholder_frame.tkraise()
+        
+        self.DC_Listbox = DV_DC_Listbox.DC_Listbox(DC_Listbox_Frame, DC_control_frames)
 
         #################################################
         # Create tab for exploratory data analysis (EDA)
@@ -119,33 +138,28 @@ class DataVis():
         EDA_Canvas_Frame.grid_columnconfigure(0, weight=1)
         EDA_Top_Pane.add(EDA_Canvas_Frame, stretch='always')
 
-        #self.fig = fig = Figure()
-        #self.EDA_Canvas = EDA_Canvas = FigureCanvasTkAgg(fig, master=EDA_Canvas_Frame)
-        #EDA_Canvas.get_tk_widget().grid(sticky='nsew')
-
-        pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
         #pp_controls = ppControlsTest.PP_Frame(EDA_Controls_Frame, EDA_Canvas)
+        pp_controls = DV_EDA_Control_Panels.PP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
         cm_controls = DV_EDA_Control_Panels.CM_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
         bp_controls = DV_EDA_Control_Panels.BP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
         sp_controls = DV_EDA_Control_Panels.SP_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
-        pca_controls = DV_EDA_Control_Panels.PCA_Frame(EDA_Controls_Frame, EDA_Canvas_Frame)
-        placeholder_frame = tk.Frame(EDA_Controls_Frame)
-        placeholder_frame.grid(row=0, column=0, sticky='nsew')
-        placeholder_frame.grid_rowconfigure(0, weight=1)
-        placeholder_frame.grid_columnconfigure(0, weight=1)
-        hint_frame = tk.Frame(placeholder_frame)
-        hint_frame.grid(row=0, column=0)
-        select_start = tk.Label(hint_frame, text='Select a graph type to begin EDA')
-        select_start.grid(sticky='nsew')
+        EDA_placeholder_frame = tk.Frame(EDA_Controls_Frame)
+        EDA_placeholder_frame.grid(row=0, column=0, sticky='nsew')
+        EDA_placeholder_frame.grid_rowconfigure(0, weight=1)
+        EDA_placeholder_frame.grid_columnconfigure(0, weight=1)
+        EDA_hint_frame = tk.Frame(EDA_placeholder_frame)
+        EDA_hint_frame.grid(row=0, column=0)
+        EDA_select_start = tk.Label(EDA_hint_frame, text='Select a graph type to begin EDA')
+        EDA_select_start.grid(sticky='nsew')
 
-        self.control_frames = control_frames = {}
+        self.EDA_control_frames = EDA_control_frames = {}
 
-        for frame in (pp_controls, cm_controls, bp_controls, sp_controls, pca_controls):
+        for frame in (pp_controls, cm_controls, bp_controls, sp_controls):
             frame.grid(row=0, column=0, sticky='nsew')
-            control_frames[frame._name] = frame
-        placeholder_frame.tkraise()
+            EDA_control_frames[frame._name] = frame
+        EDA_placeholder_frame.tkraise()
 
-        self.EDA_Listbox = EDA_Listbox = DV_EDA_Listbox.EDA_Listbox(EDA_Listbox_Frame, EDA_Canvas_Frame, control_frames)
+        self.EDA_Listbox = DV_EDA_Listbox.EDA_Listbox(EDA_Listbox_Frame, EDA_Canvas_Frame, EDA_control_frames)
 
 
         ###############################
@@ -175,21 +189,7 @@ if __name__ == '__main__':
 #### TODO: ######################################################################################
 
 # FINALIZE AND TEST DATAFRAME VIEW
-# NEED TO MAKE THE BP LISTBOXES CUR_SELECTION INITIALIZE CORRECTLY ACCORDING TO WHATS IN THE .INI
 # TEST ALL THE CONTROL PANELS, AS MANY OPTIONS AND COMBINATIONS AS POSSIBLE TO CHECK FOR ERRORS
-
-# GET AN EXECUTABLE RUNNING
-
-# GET ALL CONTROL PANELS UP AND RUNNING, INCLUDING THE ONE FOR PCA (MAKE PCA PLOT)
-
-# CONSIDER REPLACING FIGCANVAS WITH CANVAS AND SAVE ALL PLOTS AS PNG, MIGHT MAKE CANVAS ZOOM FUNCTIONALITY EASIER
-# WOULD MAKE VARIOUS GRAPHING FUNCTIONS MORE CLASSABLE IF YOU IMPORT *GRAPH2PNG (CLEAN UP FUNCTIONS INTO A FILE*)
-# THEN JUST CALL GRAPH2PNG.PP, GRAPH2PNG.CM, ..., GRAPH2PNG.PCA IN EDA ONSELECT AND CONTROL PANEL EVENTS
-# CLEAN UP MOST FUNCTIONS INTO CLASSES AND OTHER FILES AND IMPORT (READABILITY)
-
-# CANVAS ZOOM FUNCTIONALITY
-
-# SWITCH DATA CLEANING LAYOUT TO MATCH NEW EDA LAYOUT
 
 # LOADING BAR AMOUNT AND/OR ERROR REPORTING CAN BE PLACED AT (THESE ARE GUESSES):
     # ERROR READING INI, 0% ACT, %0 DIS

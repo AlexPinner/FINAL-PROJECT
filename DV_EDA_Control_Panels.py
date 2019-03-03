@@ -1,5 +1,6 @@
 import tkinter as tk
 from configparser import ConfigParser
+from tkinter import messagebox
 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -11,7 +12,6 @@ import DV_ZoomableCanvas
 
 class PP_Frame(tk.Frame):
     def __init__(self, root, canvas_frame, **options):
-        
         tk.Frame.__init__(self, root, **options)
 
         # Get ini options
@@ -26,7 +26,7 @@ class PP_Frame(tk.Frame):
 
         # Lists for listboxes and option menus
         columns = self.data.columns
-        numeric_columns = self.data.select_dtypes(exclude=['object'])
+        numeric_columns = self.data.select_dtypes(exclude=['object', 'category'])
         self.columns_list = list()
         self.numeric_columns_list = list()
         self.columns_list.append('None') # so hue coloring can be set to off
@@ -74,7 +74,12 @@ class PP_Frame(tk.Frame):
         hue_label = tk.Label(hue_frame, text='Column that determines hue:')
         hue_label.pack()
 
-        hue_option = tk.OptionMenu(hue_frame, self.pp_hue, *self.columns_list)
+        def hue_update(self, choice):
+            if choice in self.pp_vars:
+                messagebox.showwarning(title='Invalid Choice', message='The column selected for hue cannot also be selected for use in plot.')
+                self.pp_hue.set('None')
+
+        hue_option = tk.OptionMenu(hue_frame, self.pp_hue, *self.columns_list, command=lambda x: hue_update(self, x))
         hue_option.pack()
 
         # PP VARS CONTROL FRAME
@@ -85,10 +90,15 @@ class PP_Frame(tk.Frame):
 
         def vars_update(self, event):
             lbTup = event.widget.curselection()
-            tmp = list()
-            for tup in lbTup:
-                tmp.append(self.numeric_columns_list[tup])
-            self.pp_vars = tuple(tmp)
+            if lbTup:
+                tmp = list()
+                for tup in lbTup:
+                    if not self.pp_hue.get() == self.numeric_columns_list[tup]: # make sure the vars selected are not overlapping with pp_hue
+                        tmp.append(self.numeric_columns_list[tup])
+                    else:
+                        messagebox.showwarning(title='Invalid Selection', message='Columns chosen for graph cannot also be used for hue, the current selection has been updated')
+                        vars_listbox.select_clear(tup)
+                self.pp_vars = tuple(tmp)
                 
         vars_listbox = tk.Listbox(vars_frame, selectmode=tk.MULTIPLE, justify=tk.CENTER)
         vars_listbox.bind('<<ListboxSelect>>', lambda x: vars_update(self, x))
@@ -126,7 +136,7 @@ class PP_Frame(tk.Frame):
         diag_kind_label = tk.Label(
             diag_kind_frame, text='Graph type along diagonal:')
         diag_kind_label.pack()
-
+        
         diag_kind_option = tk.OptionMenu(
             diag_kind_frame, self.pp_diag_kind, *self.diag_kind_list)
         diag_kind_option.pack()
@@ -226,7 +236,6 @@ class PP_Frame(tk.Frame):
 
 class CM_Frame(tk.Frame):
     def __init__(self, root, canvas_frame, **options):
-        
         tk.Frame.__init__(self, root, **options)
 
         # Get ini options
@@ -376,7 +385,6 @@ class CM_Frame(tk.Frame):
 
 class BP_Frame(tk.Frame):
     def __init__(self, root, canvas_frame, **options):
-        
         tk.Frame.__init__(self, root, **options)
 
         # Get ini options
@@ -390,7 +398,7 @@ class BP_Frame(tk.Frame):
         self.data = self.data.dropna()
 
         # Lists for listboxes and option menus
-        numeric_columns = self.data.select_dtypes(exclude=['object'])
+        numeric_columns = self.data.select_dtypes(exclude=['object', 'category'])
         self.numeric_columns_list = list()
         for num_col in numeric_columns:
             self.numeric_columns_list.append(num_col)
@@ -623,31 +631,242 @@ class BP_Frame(tk.Frame):
         canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
         canvas.grid()
 
-
 class SP_Frame(tk.Frame):
     def __init__(self, root, canvas_frame, **options):
         tk.Frame.__init__(self, root, **options)
         
+        # Get ini options
+        self.config  = config = ConfigParser()
+        config.read('datavis.ini')
+        if config.has_section('general'):
+            data_loc = config.get('general', 'dataset_location')
+            self.data = pd.read_csv(data_loc, encoding='latin-1')
+        else:
+            self.data = sns.load_dataset('tips')
+        self.data = self.data.dropna()
+        
+        # Lists for listboxes and option menus
+        columns = self.data.columns
+        numeric_columns = self.data.select_dtypes(exclude=['object', 'category'])
+        self.columns_list = list()
+        self.numeric_columns_list = list()
+        self.columns_list.append('None') # so hue coloring can be set to off
+        for col in columns:
+            self.columns_list.append(col)
+        for num_col in numeric_columns:
+            self.numeric_columns_list.append(num_col)
+
+        # Default graph options
+        self.sp_x = tk.Variable(value=numeric_columns.columns[0]) # x var
+        self.sp_y = tk.Variable(value=numeric_columns.columns[1]) # y var
+        self.sp_hue = tk.Variable(value='None') # which column determines hue?
+        self.sp_legend = tk.BooleanVar(value='True') # display legend?
+        self.sp_scatter = tk.BooleanVar(value='True') # draw scatter?
+        self.sp_fit_reg = tk.BooleanVar(value='True') # fit linear regression line?
+
+        # Load graph options from ini, if they don't exist create them and set to default values
+        try:
+            self.sp_x = tk.Variable(value=config.get('scatter', 'x'))
+            self.sp_y = tk.Variable(value=config.get('scatter', 'y'))
+            self.sp_hue = tk.Variable(value=config.get('scatter', 'hue'))
+            self.sp_legend = tk.BooleanVar(value=config.getboolean('scatter', 'legend'))
+            self.sp_scatter = tk.BooleanVar(value=config.getboolean('scatter', 'scatter'))
+            self.sp_fit_reg = tk.BooleanVar(value=config.getboolean('scatter', 'fit_reg'))
+        except:
+            if not config.has_section('scatter'):
+                config.add_section('scatter')
+                config.set('scatter', 'x', self.sp_x.get())
+                config.set('scatter', 'y', self.sp_y.get())
+                config.set('scatter', 'hue', self.sp_hue.get())
+                config.set('scatter', 'legend', str(self.sp_legend.get()))
+                config.set('scatter', 'scatter', str(self.sp_scatter.get()))
+                config.set('scatter', 'fit_reg', str(self.sp_fit_reg.get()))
+                with open('datavis.ini', 'w') as configfile:
+                    config.write(configfile)
+                configfile.close()
+        
+        # General frame settings
+        pad_size = 50
+        listbox_height = 4
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(8, weight=1)
 
-        self.frame = frame = tk.Frame(self)
-        frame.grid(row=0, column=1)
-        self.label = label =tk.Label(frame, text='SCATTER PLOT CONTROLS')
-        label.grid()
-        self.notification = notification =tk.Label(frame, text='Under Construction')
-        notification.grid()
+        # SP X CONTROL FRAME
+        x_frame = tk.Frame(self)
+        x_frame.grid(row=0, column=1, padx=pad_size)
 
-class PCA_Frame(tk.Frame):
-    def __init__(self, root, canvas_frame, **options):
-        tk.Frame.__init__(self, root, **options)
+        x_label = tk.Label(x_frame, text='Column to use for x:')
+        x_label.pack()
 
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(2, weight=1)
+        def x_update(self, event):
+            x = event.widget.curselection()
+            if x:
+                self.sp_x = tk.Variable(value=self.numeric_columns_list[x[0]])
+        
+        x_listbox = tk.Listbox(x_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
+        x_listbox.bind('<<ListboxSelect>>', lambda x: x_update(self, x))
+        for column in self.numeric_columns_list:
+            x_listbox.insert(tk.END, column)
+        x_listbox.config(height=listbox_height)
+        x_listbox.pack(side=tk.LEFT)
 
-        self.frame = frame = tk.Frame(self)
-        frame.grid(row=0, column=1)
-        self.label = label =tk.Label(frame, text='PCA CONTROLS')
-        label.grid()
-        self.notification = notification =tk.Label(frame, text='Under Construction')
-        notification.grid()
+        x_scrollbar = tk.Scrollbar(x_frame)
+        x_listbox.config(yscrollcommand=x_scrollbar.set)
+        x_scrollbar.config(command=x_listbox.yview)
+        x_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # SP Y CONTROL FRAME
+        y_frame = tk.Frame(self)
+        y_frame.grid(row=0, column=2, padx=pad_size)
+
+        y_label = tk.Label(y_frame, text='Column to use for y:')
+        y_label.pack()
+
+        def y_update(self, event):
+            y = event.widget.curselection()
+            if y:
+                self.sp_y = tk.Variable(value=self.numeric_columns_list[y[0]])
+        
+        y_listbox = tk.Listbox(y_frame, selectmode=tk.SINGLE, justify=tk.CENTER)
+        y_listbox.bind('<<ListboxSelect>>', lambda x: y_update(self, x))
+        for column in self.numeric_columns_list:
+            y_listbox.insert(tk.END, column)
+        y_listbox.config(height=listbox_height)
+        y_listbox.pack(side=tk.LEFT)
+
+        y_scrollbar = tk.Scrollbar(y_frame)
+        y_listbox.config(yscrollcommand=y_scrollbar.set)
+        y_scrollbar.config(command=y_listbox.yview)
+        y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # SP HUE CONTROL FRAME
+        hue_frame = tk.Frame(self)
+        hue_frame.grid(row=0, column=3, padx=pad_size)
+
+        hue_label = tk.Label(hue_frame, text='Column that determines hue:')
+        hue_label.pack()
+
+        hue_option = tk.OptionMenu(hue_frame, self.sp_hue, *self.columns_list)
+        hue_option.pack()
+
+        # SP LEGEND CONTROL FRAME
+        legend_frame = tk.Frame(self)
+        legend_frame.grid(row=0, column=4, padx=pad_size)
+
+        legend_label = tk.Label(legend_frame, text='Show legend:')
+        legend_label.pack()
+
+        def update_legend_check():
+            legend_checkbox.config(text=str(self.sp_legend.get()))
+        legend_checkbox = tk.Checkbutton(legend_frame, variable=self.sp_legend, onvalue='True', offvalue='False', command=update_legend_check, relief=tk.RAISED)
+        legend_checkbox.pack()
+        update_legend_check()
+
+        # SP SCATTER CONTROL FRAME
+        scatter_frame = tk.Frame(self)
+        scatter_frame.grid(row=0, column=5, padx=pad_size)
+
+        scatter_label = tk.Label(scatter_frame, text='Scatter:')
+        scatter_label.pack()
+
+        def update_scatter_check():
+            scatter_checkbox.config(text=str(self.sp_scatter.get()))
+        scatter_checkbox = tk.Checkbutton(scatter_frame, variable=self.sp_scatter, onvalue='True', offvalue='False', command=update_scatter_check, relief=tk.RAISED)
+        scatter_checkbox.pack()
+        update_scatter_check()
+
+        # SP FIT REG CONTROL FRAME
+        fit_reg_frame = tk.Frame(self)
+        fit_reg_frame.grid(row=0, column=6, padx=pad_size)
+
+        fit_reg_label = tk.Label(fit_reg_frame, text='Fit regression line:')
+        fit_reg_label.pack()
+
+        def update_fit_reg_check():
+            fit_reg_checkbox.config(text=str(self.sp_fit_reg.get()))
+        fit_reg_checkbox = tk.Checkbutton(fit_reg_frame, variable=self.sp_fit_reg, onvalue='True', offvalue='False', command=update_fit_reg_check, relief=tk.RAISED)
+        fit_reg_checkbox.pack()
+        update_fit_reg_check()
+
+        # BUTTON CONTROL FRAME
+        button_frame = tk.Frame(self)
+        button_frame.grid(row=0, column=7, padx=pad_size)
+
+        preview_button = tk.Button(
+            button_frame, text='Preview Settings', command=lambda: self.preview_on_select(canvas_frame))
+        preview_button.pack()
+
+        apply_button = tk.Button(
+            button_frame, text='Apply Settings', command=lambda: self.apply_on_select(canvas_frame))
+        apply_button.pack()
+
+    def preview_on_select(self, canvas_frame):
+        preview_x = self.sp_x.get()
+        preview_y = self.sp_y.get()
+        preview_hue = self.sp_hue.get()
+        if preview_hue == 'None':
+            preview_hue = None
+        preview_legend = self.sp_legend.get()
+        preview_scatter = self.sp_scatter.get()
+        preview_fit_reg = self.sp_fit_reg.get()
+
+        print('--SP ON PREVIEW--')
+        print('X: ', preview_x, type(preview_x))
+        print('Y: ', preview_y, type(preview_y))
+        print('Hue: ', preview_hue, type(preview_hue))
+        print('Legend: ', preview_legend, type(preview_legend))
+        print('Scatter: ', preview_scatter, type(preview_scatter))
+        print('Fit Reg: ', preview_fit_reg, type(preview_fit_reg))
+
+        plt.clf()
+        sp = sns.lmplot(data=self.data, x=preview_x, y=preview_y, hue=preview_hue, legend=preview_legend, scatter=preview_scatter, fit_reg=preview_fit_reg)
+        sp.savefig('sp.png')
+        file = 'sp.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()
+
+    def apply_on_select(self, canvas_frame):
+        config = self.config
+
+        apply_x = self.sp_x.get()
+        config.set('scatter', 'x', apply_x)
+        
+        apply_y = self.sp_y.get()
+        config.set('scatter', 'y', apply_y)
+        
+        apply_hue = self.sp_hue.get()
+        config.set('scatter', 'hue', apply_hue)
+        if apply_hue == 'None':
+            apply_hue = None
+        
+        apply_scatter = self.sp_scatter.get()
+        config.set('scatter', 'scatter', str(apply_scatter))
+
+        apply_legend = self.sp_legend.get()
+        config.set('scatter', 'legend', str(apply_legend))
+
+        apply_fit_reg = self.sp_fit_reg.get()
+        config.set('scatter', 'fit_reg', str(apply_fit_reg))
+        
+        with open('datavis.ini', 'w') as configfile:
+            config.write(configfile)
+        configfile.close()
+
+        print('--SP ON APPLY--')
+        print('X: ', apply_x, type(apply_x))
+        print('Y: ', apply_y, type(apply_y))
+        print('Hue: ', apply_hue, type(apply_hue))
+        print('Legend: ', apply_legend, type(apply_legend))
+        print('Scatter: ', apply_scatter, type(apply_scatter))
+        print('Fit Reg: ', apply_fit_reg, type(apply_fit_reg))
+
+        plt.clf()
+        sp = sns.lmplot(data=self.data, x=apply_x, y=apply_y, hue=apply_hue, legend=apply_legend, scatter=apply_scatter, fit_reg=apply_fit_reg)
+        sp.savefig('sp.png')
+        file = 'sp.png'
+        for widget in canvas_frame.winfo_children():
+            widget.destroy()
+        canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
+        canvas.grid()

@@ -4,7 +4,7 @@ import pandas as pd
 import seaborn as sns
 
 class DV_DC_Table(tk.Frame):
-    def __init__(self, root):
+    def __init__(self, root, dataframe):
 
         tk.Frame.__init__(self, root)
 
@@ -29,14 +29,20 @@ class DV_DC_Table(tk.Frame):
 
         self.inner_frame = tk.Frame(self.canvas, bg='black')
 
-        config = ConfigParser()
-        config.read('datavis.ini')
-        if config.has_section('general'):
-            data_loc = config.get('general', 'dataset_location')
-            data = pd.read_csv(data_loc, encoding='latin-1')
+        print('DF is ', type(dataframe))
+        print('None is ', type(None))
+        if type(dataframe) == type(None):
+            config = ConfigParser()
+            config.read('datavis.ini')
+            if config.has_section('general'):
+                data_loc = config.get('general', 'dataset_location')
+                data = pd.read_csv(data_loc, encoding='latin-1')
+            else:
+                data = sns.load_dataset('iris')
+            self.create_table(data)
         else:
-            data = sns.load_dataset('iris')
-        self.create_table(data)
+            data = dataframe
+            self.create_table(data)
 
         self.canvas.create_window((0, 0), window=self.inner_frame)
         self.inner_frame.bind("<Configure>", self.onFrameConfigure)

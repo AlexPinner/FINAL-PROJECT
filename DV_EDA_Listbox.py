@@ -17,7 +17,7 @@ class EDA_Listbox(tk.Listbox):
 
         self.config = ConfigParser()
 
-        self.EDA_list = EDA_List = ["Pairplot", "Correlation Matrix", "Bar Chart", "Scatter Plot", "PCA"]
+        self.EDA_list = EDA_List = ["Pairplot", "Correlation Matrix", "Bar Chart", "Scatter Plot"]
         self.EDA_Listbox = EDA_Listbox = self.Create_Listbox(root, EDA_List)
         #for frame in frames:
         #    print("Values: ", frames[frame])
@@ -64,7 +64,7 @@ class EDA_Listbox(tk.Listbox):
         if(w.curselection()):
             # get data about current selection
             index = int(w.curselection()[0])
-            value = w.get(index)
+            #value = w.get(index)
 
             # Check ini for graph settings
             config.read('datavis.ini')
@@ -84,6 +84,7 @@ class EDA_Listbox(tk.Listbox):
             file = 'PSB.png'
             canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
             canvas.grid()
+            self.update_idletasks()
             
             if (index == 0):  # pairplot
                 # raise pp controls
@@ -312,44 +313,35 @@ class EDA_Listbox(tk.Listbox):
                 # raise sp controls
                 self.raise_frame(frames['!sp_frame'])
                 # use custom data for fig creation if they have loaded a custom dataset
-                if(config.has_section('scatter') and config.has_section('general')):
+                if(config.has_section('general')):
                     # import user data set
-                    data = config.get('general', 'dataset_location')
+                    data_loc = config.get('general', 'dataset_location')
+                    data = pd.read_csv(data_loc, encoding='latin-1')
                     data = data.dropna()
                     
                     # import user graph settings
                     sp_x = config.get('scatter', 'x')  # x var
                     sp_y = config.get('scatter', 'y')  # y var
                     sp_hue = config.get('scatter', 'hue')  # hue column
-                    sp_legend = config.getboolean(
-                        'scatter', 'legend')  # display legend?
-                    sp_scatter = config.getboolean(
-                        'scatter', 'scatter')  # draw scatter?
-                    # fit linear regression line?
-                    sp_fit_reg = config.get('scatter', 'fit_reg')
+                    if sp_hue == 'None':
+                        sp_hue = None
+                    sp_legend = config.getboolean('scatter', 'legend')  # display legend?
+                    sp_scatter = config.getboolean('scatter', 'scatter')  # draw scatter?
+                    sp_fit_reg = config.getboolean('scatter', 'fit_reg') # fit linear regression line?
                     
                     # terminal feedback for debugging
                     print('SP ON LISTBOX:')
-                    print('X: ', sp_x)
-                    print('Y: ', sp_y)
-                    print('Hue: ', sp_hue)
-                    print('Legend: ', sp_legend)
-                    print('Scatter: ', sp_scatter)
-                    print('Fit Reg: ', sp_fit_reg)
+                    print('X: ', sp_x, type(sp_x))
+                    print('Y: ', sp_y, type(sp_y))
+                    print('Hue: ', sp_hue, type(sp_hue))
+                    print('Legend: ', sp_legend, type(sp_legend))
+                    print('Scatter: ', sp_scatter, type(sp_scatter))
+                    print('Fit Reg: ', sp_fit_reg, type(sp_fit_reg))
 
                     # create and display custom graph
                     plt.clf()
-                    sp = sns.lmplot(data=data, x=sp_x, y=sp_y, hue=sp_hue,
-                                    legend=sp_legend, scatter=sp_scatter, fit_reg=sp_fit_reg)
+                    sp = sns.lmplot(data=data, x=sp_x, y=sp_y, hue=sp_hue, legend=sp_legend, scatter=sp_scatter, fit_reg=sp_fit_reg)
                     sp.savefig('sp.png')
-                    """
-                    fig.clear()
-                    a = fig.add_subplot(111)
-                    img_arr = mpimg.imread('sp.png')
-                    a.imshow(img_arr)
-                    a.axis('off')
-                    canvas.draw()
-                    """
                     file = 'sp.png'
                     for widget in canvas_frame.winfo_children():
                         widget.destroy()
@@ -362,26 +354,8 @@ class EDA_Listbox(tk.Listbox):
                     plt.clf()
                     sp = sns.lmplot(data=data, x="total_bill", y="tip")
                     sp.savefig('sp.png')
-                    """
-                    fig.clear()
-                    a = fig.add_subplot(111)
-                    img_arr = mpimg.imread('sp.png')
-                    a.imshow(img_arr)
-                    a.axis('off')
-                    canvas.draw()
-                    """
                     file = 'sp.png'
                     for widget in canvas_frame.winfo_children():
                         widget.destroy()
                     canvas = DV_ZoomableCanvas.ZoomCanvas(canvas_frame, file)
                     canvas.grid()
-
-            elif (index == 4):  # pca
-                # raise pca controls
-                self.raise_frame(frames['!pca_frame'])
-                # use custom data for fig creation if they have loaded a custom dataset
-                if(config.has_section('pca') and config.has_section('general')):
-                    print('You selected item %d: "%s"' % (index, value))
-
-                else:  # go with default fig creation
-                    print('You selected item %d: "%s"' % (index, value))
